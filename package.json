@@ -1,6 +1,6 @@
 {
   "name": "capacitor-biometric-authentication",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Biometric Authentication Plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -14,7 +14,7 @@
     "android/proguard-rules.pro",
     "dist/",
     "ios/Plugin/",
-    "CapacitorBiometricAuth.podspec"
+    "CapacitorBiometricAuthentication.podspec"
   ],
   "author": {
     "email": "aoneahsan@gmail.com",

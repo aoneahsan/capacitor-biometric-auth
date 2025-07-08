@@ -6,7 +6,7 @@ export default {
     {
       file: 'dist/plugin.js',
       format: 'iife',
-      name: 'capacitorBiometricAuth',
+      name: 'CapacitorBiometricAuthentication',
       globals: {
         '@capacitor/core': 'capacitorExports',
       },
