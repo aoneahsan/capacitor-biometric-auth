@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(flutter create:*)",
+      "Bash(flutter pub add:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(dart pub global activate:*)",
+      "Bash(flutterfire:*)",
+      "Bash($HOME/.pub-cache/bin/flutterfire:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(flutter create:*)",
+      "Bash(mkdir:*)",
+      "Bash(flutter pub:*)",
+      "Bash(npm init:*)",
+      "Bash(flutter:*)",
+      "Bash(rm:*)",
+      "Bash(*:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx depcheck:*)",
+      "Bash(rg:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(pkill:*)",
+      "WebFetch(domain:productfruits.com)",
+      "WebFetch(domain:userguiding.com)",
+      "WebFetch(domain:whatfix.com)",
+      "WebFetch(domain:www.helppier.com)",
+      "WebFetch(domain:www.chameleon.io)",
+      "WebFetch(domain:www.userlane.com)",
+      "WebFetch(domain:www.pendo.io)"
+    ],
+    "deny": []
+  }
+}
