@@ -22,11 +22,5 @@
     "target": "ES2017"
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "android",
-    "ios",
-    "dist",
-    "example"
-  ]
+  "exclude": ["node_modules", "android", "ios", "dist", "example"]
 }

@@ -5,5 +5,10 @@
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "capacitor.config.ts",
+    "rollup.config.js",
+    ".eslintrc.js"
+  ]
 }

@@ -9,12 +9,14 @@ This is a Capacitor plugin development project for implementing biometric authen
 ## Development Commands
 
 ### Essential Commands
+
 - `yarn dev` - Start development server on port 3000
 - `yarn build` - Build the project
 - `yarn lint` - Run ESLint for code quality checks
 - `yarn prettier` - Format code with Prettier
 
 ### Capacitor Commands
+
 - `yarn cap:sync` - Full sync (install deps, build, and sync with native projects)
 - `yarn cap:android:run` - Run on Android device/emulator
 - `yarn cap:ios:run` - Run on iOS device/simulator
@@ -22,11 +24,13 @@ This is a Capacitor plugin development project for implementing biometric authen
 - `yarn cap:ios:open` - Open Xcode
 
 ### Asset Generation
+
 - `yarn gen:assets` - Generate both Android and iOS app icons and splash screens
 - `yarn gen:android:assets` - Generate Android assets only
 - `yarn gen:ios:assets` - Generate iOS assets only
 
 ### Configuration Management
+
 - `yarn sync:apps-config` - Apply native app configuration using Trapeze
 - `yarn update:ios:info` - Update iOS app configuration
 - `yarn update:android:info` - Update Android app configuration
@@ -34,6 +38,7 @@ This is a Capacitor plugin development project for implementing biometric authen
 ## Architecture and Code Structure
 
 ### Technology Stack
+
 - **Framework**: React with TypeScript (strict mode enabled)
 - **Build Tool**: Vite
 - **Platform**: Capacitor v7.4.1 for cross-platform mobile development
@@ -41,6 +46,7 @@ This is a Capacitor plugin development project for implementing biometric authen
 - **Path Alias**: `@/` maps to `src/` directory
 
 ### Plugin Architecture (To Be Implemented)
+
 The plugin should follow Capacitor's plugin architecture:
 
 1. **Core Plugin Interface** - Define TypeScript interfaces in `src/definitions.ts`
@@ -51,6 +57,7 @@ The plugin should follow Capacitor's plugin architecture:
 4. **Plugin Facade** - Main plugin entry point that delegates to platform implementations
 
 ### Configuration
+
 - **Bundle ID**: `com.zaions.biometric_auth`
 - **App Name**: "Biometric Auth"
 - **Build Output**: `build/` directory
@@ -59,6 +66,7 @@ The plugin should follow Capacitor's plugin architecture:
 ## Development Guidelines
 
 ### From README Requirements
+
 1. **Type Safety**: Ensure all APIs are fully typed with TypeScript
 2. **Security First**: Implement secure session management and encryption
 3. **Framework Independent**: Do not depend on any specific frontend framework
@@ -70,11 +78,13 @@ The plugin should follow Capacitor's plugin architecture:
 5. **Easy Initialization**: Plugin should work with minimal configuration
 
 ### Platform-Specific Resources
+
 - **Android**: [Biometric Auth API](https://developer.android.com/identity/sign-in/biometric-auth)
 - **iOS**: [LocalAuthentication Framework](https://developer.apple.com/documentation/localauthentication)
 - **Web**: [Web Authentication API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API)
 
 ### Code Style
+
 - Indent with 2 spaces (enforced by .editorconfig)
 - Use LF line endings
 - UTF-8 encoding

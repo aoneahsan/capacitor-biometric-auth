@@ -4,7 +4,7 @@ vars:
   BUNDLE_ID:
     default: com.zaions.biometric_auth
   PRODUCT_NAME:
-    default: "Biometric Auth"
+    default: 'Biometric Auth'
 
 platforms:
   ios:

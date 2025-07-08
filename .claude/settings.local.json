@@ -31,7 +31,11 @@
       "WebFetch(domain:www.chameleon.io)",
       "WebFetch(domain:www.userlane.com)",
       "WebFetch(domain:www.pendo.io)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(yarn build)",
+      "Bash(yarn add:*)",
+      "Bash(yarn lint)",
+      "Bash(yarn prettier:*)"
     ],
     "deny": []
   }

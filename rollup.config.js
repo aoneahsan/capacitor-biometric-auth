@@ -1,3 +1,5 @@
+import resolve from '@rollup/plugin-node-resolve';
+
 export default {
   input: 'dist/esm/index.js',
   output: [
@@ -19,4 +21,10 @@ export default {
     },
   ],
   external: ['@capacitor/core'],
+  plugins: [
+    resolve({
+      // Resolve modules from node_modules
+      preferBuiltins: false,
+    }),
+  ],
 };

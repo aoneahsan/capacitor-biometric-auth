@@ -151,7 +151,7 @@ export enum BiometricType {
   FACE_AUTHENTICATION = 'faceAuthentication',
   PASSCODE = 'passcode',
   PATTERN = 'pattern',
-  PIN = 'pin'
+  PIN = 'pin',
 }
 
 export enum BiometricUnavailableReason {
@@ -161,7 +161,7 @@ export enum BiometricUnavailableReason {
   PERMISSION_DENIED = 'permissionDenied',
   NOT_SUPPORTED = 'notSupported',
   LOCKED_OUT = 'lockedOut',
-  USER_DISABLED = 'userDisabled'
+  USER_DISABLED = 'userDisabled',
 }
 
 export enum FallbackMethod {
@@ -169,7 +169,7 @@ export enum FallbackMethod {
   PASSWORD = 'password',
   PATTERN = 'pattern',
   PIN = 'pin',
-  SECURITY_QUESTION = 'securityQuestion'
+  SECURITY_QUESTION = 'securityQuestion',
 }
 
 export interface BiometricAuthError {
@@ -184,7 +184,7 @@ export interface BiometricAuthError {
   /**
    * Additional error details
    */
-  details?: any;
+  details?: unknown;
 }
 
 export enum BiometricErrorCode {
@@ -197,5 +197,5 @@ export enum BiometricErrorCode {
   INVALID_CONTEXT = 'invalidContext',
   NOT_ENROLLED = 'notEnrolled',
   TIMEOUT = 'timeout',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }

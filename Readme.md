@@ -43,9 +43,9 @@ const authenticate = async () => {
       subtitle: 'Access your account',
       description: 'Place your finger on the sensor',
       fallbackButtonTitle: 'Use Passcode',
-      cancelButtonTitle: 'Cancel'
+      cancelButtonTitle: 'Cancel',
     });
-    
+
     if (result.success) {
       console.log('Authentication successful!');
       console.log('Session ID:', result.sessionId);
@@ -92,7 +92,7 @@ const result = await BiometricAuth.authenticate({
   cancelButtonTitle: 'Cancel',
   disableFallback: false,
   maxAttempts: 3,
-  saveCredentials: true
+  saveCredentials: true,
 });
 ```
 
@@ -116,9 +116,9 @@ await BiometricAuth.configure({
   uiConfig: {
     primaryColor: '#007AFF',
     backgroundColor: '#FFFFFF',
-    textColor: '#000000'
+    textColor: '#000000',
   },
-  fallbackMethods: ['passcode', 'password']
+  fallbackMethods: ['passcode', 'password'],
 });
 ```
 
@@ -126,38 +126,40 @@ await BiometricAuth.configure({
 
 ### BiometricAuthConfig
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `sessionDuration` | `number` | Session validity in seconds | 3600 |
-| `encryptionSecret` | `string` | Secret key for encryption | - |
-| `requireAuthenticationForEveryAccess` | `boolean` | Require auth for each access | false |
-| `uiConfig` | `BiometricUIConfig` | UI customization options | - |
-| `fallbackMethods` | `FallbackMethod[]` | Available fallback methods | [] |
+| Option                                | Type                | Description                  | Default |
+| ------------------------------------- | ------------------- | ---------------------------- | ------- |
+| `sessionDuration`                     | `number`            | Session validity in seconds  | 3600    |
+| `encryptionSecret`                    | `string`            | Secret key for encryption    | -       |
+| `requireAuthenticationForEveryAccess` | `boolean`           | Require auth for each access | false   |
+| `uiConfig`                            | `BiometricUIConfig` | UI customization options     | -       |
+| `fallbackMethods`                     | `FallbackMethod[]`  | Available fallback methods   | []      |
 
 ### BiometricAuthOptions
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `title` | `string` | Prompt title | - |
-| `subtitle` | `string` | Prompt subtitle | - |
-| `description` | `string` | Prompt description | - |
-| `fallbackButtonTitle` | `string` | Fallback button text | - |
-| `cancelButtonTitle` | `string` | Cancel button text | - |
-| `disableFallback` | `boolean` | Disable fallback option | false |
-| `maxAttempts` | `number` | Max failed attempts | 3 |
-| `saveCredentials` | `boolean` | Save credentials for future | false |
+| Option                | Type      | Description                 | Default |
+| --------------------- | --------- | --------------------------- | ------- |
+| `title`               | `string`  | Prompt title                | -       |
+| `subtitle`            | `string`  | Prompt subtitle             | -       |
+| `description`         | `string`  | Prompt description          | -       |
+| `fallbackButtonTitle` | `string`  | Fallback button text        | -       |
+| `cancelButtonTitle`   | `string`  | Cancel button text          | -       |
+| `disableFallback`     | `boolean` | Disable fallback option     | false   |
+| `maxAttempts`         | `number`  | Max failed attempts         | 3       |
+| `saveCredentials`     | `boolean` | Save credentials for future | false   |
 
 ## Platform-Specific Implementation
 
 ### Android
 
 Uses the BiometricPrompt API for secure authentication. Requires:
+
 - Android 6.0 (API 23) or higher
 - Biometric hardware (fingerprint sensor, face recognition)
 
 ### iOS
 
 Uses the LocalAuthentication framework. Supports:
+
 - Touch ID (iPhone 5s and later)
 - Face ID (iPhone X and later)
 - Requires iOS 11.0 or higher
@@ -165,6 +167,7 @@ Uses the LocalAuthentication framework. Supports:
 ### Web
 
 Implements the Web Authentication API (WebAuthn) for biometric authentication in browsers. Supports:
+
 - Platform authenticators (Windows Hello, Touch ID, etc.)
 - Requires HTTPS connection
 - Modern browsers with WebAuthn support
@@ -182,6 +185,7 @@ interface BiometricAuthError {
 ```
 
 Error codes include:
+
 - `authenticationFailed`: Authentication attempt failed
 - `userCancelled`: User cancelled the authentication
 - `systemCancelled`: System cancelled the authentication
