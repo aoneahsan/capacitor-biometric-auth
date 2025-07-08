@@ -24,6 +24,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -52,30 +53,32 @@ import java.util.UUID;
 
 @CapacitorPlugin(name = "BiometricAuth")
 public class BiometricAuthPlugin extends Plugin {
-    private static final String TAG = "BiometricAuth";
-    private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
-    private static final String KEY_ALIAS = "BiometricAuthKey";
-    private static final String PREFS_NAME = "BiometricAuthPrefs";
-    private static final String PREF_SESSION_TOKEN = "session_token";
-    private static final String PREF_SESSION_EXPIRY = "session_expiry";
-    private static final String PREF_STORED_CREDENTIALS = "stored_credentials";
     
-    private BiometricPrompt biometricPrompt;
-    private BiometricPrompt.PromptInfo promptInfo;
-    private Executor executor;
-    private KeyStore keyStore;
-    private Cipher cipher;
+    private static final String TAG = "BiometricAuth";
+    private static final String KEY_ALIAS = "BiometricAuthKey";
+    private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
+    private static final String TRANSFORMATION = "AES/GCM/NoPadding";
+    private static final int GCM_TAG_LENGTH = 128;
+    
+    // Shared preferences keys
+    private static final String PREFS_NAME = "BiometricAuthPrefs";
+    private static final String PREF_SESSION_TOKEN = "sessionToken";
+    private static final String PREF_SESSION_EXPIRY = "sessionExpiry";
+    private static final String PREF_STORED_CREDENTIALS = "storedCredentials";
     
     // Configuration
-    private long sessionDuration = 300000; // 5 minutes default
-    private String encryptionSecret = "default-secret";
+    private long sessionDuration = 3600; // 1 hour in seconds
+    private String encryptionSecret = "";
     private boolean allowDeviceCredential = true;
     private int maxAttempts = 3;
-    private int lockoutDuration = 30000; // 30 seconds
+    private int lockoutDuration = 30;
+    
+    private KeyStore keyStore;
+    private BiometricPrompt biometricPrompt;
+    private BiometricPrompt.PromptInfo promptInfo;
     
     @Override
     public void load() {
-        executor = ContextCompat.getMainExecutor(getContext());
         try {
             keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
             keyStore.load(null);
@@ -90,40 +93,44 @@ public class BiometricAuthPlugin extends Plugin {
         BiometricManager biometricManager = BiometricManager.from(context);
         
         JSObject result = new JSObject();
-        boolean isAvailable = false;
-        String reason = "";
-        
-        int canAuthenticate = biometricManager.canAuthenticate(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG | 
-            BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        );
+        int canAuthenticate = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK);
         
         switch (canAuthenticate) {
             case BiometricManager.BIOMETRIC_SUCCESS:
-                isAvailable = true;
+                result.put("available", true);
                 break;
             case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                reason = "NO_HARDWARE";
+                result.put("available", false);
+                result.put("reason", "noHardware");
+                result.put("errorMessage", "No biometric hardware detected");
                 break;
             case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                reason = "HARDWARE_UNAVAILABLE";
+                result.put("available", false);
+                result.put("reason", "hardwareUnavailable");
+                result.put("errorMessage", "Biometric hardware is unavailable");
                 break;
             case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                reason = "NOT_ENROLLED";
+                result.put("available", false);
+                result.put("reason", "noEnrolledBiometrics");
+                result.put("errorMessage", "No biometric data enrolled");
                 break;
             case BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED:
-                reason = "SECURITY_UPDATE_REQUIRED";
+                result.put("available", false);
+                result.put("reason", "securityUpdateRequired");
+                result.put("errorMessage", "Security update required");
                 break;
             case BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED:
-                reason = "UNSUPPORTED";
+                result.put("available", false);
+                result.put("reason", "notSupported");
+                result.put("errorMessage", "Biometric authentication not supported");
                 break;
-            case BiometricManager.BIOMETRIC_STATUS_UNKNOWN:
-                reason = "STATUS_UNKNOWN";
+            default:
+                result.put("available", false);
+                result.put("reason", "unknown");
+                result.put("errorMessage", "Unknown error");
                 break;
         }
         
-        result.put("isAvailable", isAvailable);
-        result.put("reason", reason);
         call.resolve(result);
     }
     
@@ -132,36 +139,36 @@ public class BiometricAuthPlugin extends Plugin {
         Context context = getContext();
         BiometricManager biometricManager = BiometricManager.from(context);
         
-        List<String> biometrics = new ArrayList<>();
+        JSONArray biometrics = new JSONArray();
         
-        // Check for fingerprint
-        if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) 
-            == BiometricManager.BIOMETRIC_SUCCESS) {
-            biometrics.add("FINGERPRINT");
+        // Check for different biometric types
+        int canAuthenticate = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG);
+        if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS) {
+            // Android doesn't differentiate between fingerprint, face, etc. at API level
+            // We'll return generic biometric support
+            biometrics.put("fingerprint");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                biometrics.put("faceAuthentication");
+            }
         }
         
-        // On Android, we can't distinguish between different biometric types easily
-        // So we'll just report generic biometric support
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) 
-                == BiometricManager.BIOMETRIC_SUCCESS) {
-                biometrics.add("FACE");
+        // Check for device credential
+        if (allowDeviceCredential) {
+            int deviceCredential = biometricManager.canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL);
+            if (deviceCredential == BiometricManager.BIOMETRIC_SUCCESS) {
+                biometrics.put("passcode");
+                biometrics.put("pattern");
+                biometrics.put("pin");
             }
         }
         
         JSObject result = new JSObject();
-        result.put("biometrics", new JSONArray(biometrics));
+        result.put("biometrics", biometrics);
         call.resolve(result);
     }
     
     @PluginMethod
     public void authenticate(PluginCall call) {
-        String reason = call.getString("reason", "Please authenticate");
-        String title = call.getString("title", "Authentication Required");
-        String subtitle = call.getString("subtitle", "");
-        String fallbackTitle = call.getString("fallbackTitle", "Use PIN");
-        boolean disableBackup = call.getBoolean("disableBackup", false);
-        
         Activity activity = getActivity();
         if (!(activity instanceof FragmentActivity)) {
             call.reject("Activity must be a FragmentActivity");
@@ -170,198 +177,134 @@ public class BiometricAuthPlugin extends Plugin {
         
         FragmentActivity fragmentActivity = (FragmentActivity) activity;
         
-        // Check if there's a valid session
-        if (isSessionValid()) {
-            JSObject result = new JSObject();
-            result.put("success", true);
-            result.put("sessionToken", getSessionToken());
-            call.resolve(result);
-            return;
-        }
+        // Get options
+        String title = call.getString("title", "Authenticate");
+        String subtitle = call.getString("subtitle", "");
+        String description = call.getString("description", "");
+        String fallbackButtonTitle = call.getString("fallbackButtonTitle", "Use Passcode");
+        String cancelButtonTitle = call.getString("cancelButtonTitle", "Cancel");
+        boolean disableFallback = call.getBoolean("disableFallback", false);
+        boolean saveCredentials = call.getBoolean("saveCredentials", false);
+        
+        // Create executor
+        Executor executor = ContextCompat.getMainExecutor(activity);
         
         // Create authentication callback
-        BiometricPrompt.AuthenticationCallback authCallback = new BiometricPrompt.AuthenticationCallback() {
+        biometricPrompt = new BiometricPrompt(fragmentActivity, executor, new BiometricPrompt.AuthenticationCallback() {
             @Override
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                 super.onAuthenticationError(errorCode, errString);
+                
                 JSObject result = new JSObject();
                 result.put("success", false);
-                result.put("error", mapErrorCode(errorCode));
-                result.put("message", errString.toString());
+                
+                JSObject error = new JSObject();
+                switch (errorCode) {
+                    case BiometricPrompt.ERROR_USER_CANCELED:
+                        error.put("code", "userCancelled");
+                        break;
+                    case BiometricPrompt.ERROR_LOCKOUT:
+                        error.put("code", "lockedOut");
+                        break;
+                    case BiometricPrompt.ERROR_TIMEOUT:
+                        error.put("code", "timeout");
+                        break;
+                    default:
+                        error.put("code", "authenticationFailed");
+                        break;
+                }
+                error.put("message", errString.toString());
+                
+                result.put("error", error);
                 call.resolve(result);
             }
             
             @Override
-            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
-                super.onAuthenticationSucceeded(result);
-                String sessionToken = createSession();
-                JSObject response = new JSObject();
-                response.put("success", true);
-                response.put("sessionToken", sessionToken);
-                call.resolve(response);
+            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult authResult) {
+                super.onAuthenticationSucceeded(authResult);
+                
+                // Generate session token
+                String sessionId = UUID.randomUUID().toString();
+                String token = UUID.randomUUID().toString();
+                
+                // Store session
+                SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(PREF_SESSION_TOKEN, token);
+                editor.putLong(PREF_SESSION_EXPIRY, System.currentTimeMillis() + (sessionDuration * 1000));
+                editor.apply();
+                
+                JSObject result = new JSObject();
+                result.put("success", true);
+                result.put("sessionId", sessionId);
+                result.put("token", token);
+                
+                call.resolve(result);
             }
             
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                // Don't reject here, let the user try again
+                // Don't resolve here, let the user try again
             }
-        };
+        });
         
-        // Create biometric prompt
-        biometricPrompt = new BiometricPrompt(fragmentActivity, executor, authCallback);
-        
-        // Build prompt info
+        // Create prompt info
         BiometricPrompt.PromptInfo.Builder builder = new BiometricPrompt.PromptInfo.Builder()
-            .setTitle(title)
-            .setSubtitle(subtitle)
-            .setDescription(reason);
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setDescription(description);
         
-        if (disableBackup || !allowDeviceCredential) {
-            builder.setNegativeButtonText("Cancel");
+        if (disableFallback || !allowDeviceCredential) {
+            builder.setNegativeButtonText(cancelButtonTitle);
         } else {
-            builder.setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG | 
-                BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            );
+            builder.setDeviceCredentialAllowed(true);
         }
         
         promptInfo = builder.build();
         
         // Show biometric prompt
-        getActivity().runOnUiThread(() -> {
+        activity.runOnUiThread(() -> {
             biometricPrompt.authenticate(promptInfo);
         });
     }
     
     @PluginMethod
-    public void simpleAuthenticate(PluginCall call) {
-        // For Android, this is the same as authenticate
-        authenticate(call);
-    }
-    
-    @PluginMethod
-    public void storeCredential(PluginCall call) {
-        String credentialId = call.getString("credentialId");
-        String credentialData = call.getString("credentialData");
-        
-        if (credentialId == null || credentialData == null) {
-            call.reject("Missing credentialId or credentialData");
-            return;
-        }
-        
+    public void deleteCredentials(PluginCall call) {
         try {
-            // Generate or get encryption key
-            if (!keyStore.containsAlias(KEY_ALIAS)) {
-                generateSecretKey();
-            }
-            
-            // Encrypt credential data
-            String encryptedData = encryptData(credentialData);
-            
-            // Store encrypted data
+            // Clear all stored credentials
             SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
-            
-            // Get existing credentials
-            String existingCreds = prefs.getString(PREF_STORED_CREDENTIALS, "{}");
-            JSObject credentials = new JSObject(existingCreds);
-            credentials.put(credentialId, encryptedData);
-            
-            editor.putString(PREF_STORED_CREDENTIALS, credentials.toString());
+            editor.remove(PREF_STORED_CREDENTIALS);
+            editor.remove(PREF_SESSION_TOKEN);
+            editor.remove(PREF_SESSION_EXPIRY);
             editor.apply();
             
-            JSObject result = new JSObject();
-            result.put("success", true);
-            call.resolve(result);
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to store credential", e);
-            call.reject("Failed to store credential: " + e.getMessage());
-        }
-    }
-    
-    @PluginMethod
-    public void getStoredCredential(PluginCall call) {
-        String credentialId = call.getString("credentialId");
-        
-        if (credentialId == null) {
-            call.reject("Missing credentialId");
-            return;
-        }
-        
-        try {
-            SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            String existingCreds = prefs.getString(PREF_STORED_CREDENTIALS, "{}");
-            JSObject credentials = new JSObject(existingCreds);
-            
-            if (credentials.has(credentialId)) {
-                String encryptedData = credentials.getString(credentialId);
-                String decryptedData = decryptData(encryptedData);
-                
-                JSObject result = new JSObject();
-                result.put("credentialData", decryptedData);
-                call.resolve(result);
-            } else {
-                call.reject("Credential not found");
+            // Delete encryption key
+            if (keyStore.containsAlias(KEY_ALIAS)) {
+                keyStore.deleteEntry(KEY_ALIAS);
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to retrieve credential", e);
-            call.reject("Failed to retrieve credential: " + e.getMessage());
-        }
-    }
-    
-    @PluginMethod
-    public void deleteStoredCredential(PluginCall call) {
-        String credentialId = call.getString("credentialId");
-        
-        if (credentialId == null) {
-            call.reject("Missing credentialId");
-            return;
-        }
-        
-        try {
-            SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            String existingCreds = prefs.getString(PREF_STORED_CREDENTIALS, "{}");
-            JSObject credentials = new JSObject(existingCreds);
             
-            if (credentials.has(credentialId)) {
-                credentials.remove(credentialId);
-                
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(PREF_STORED_CREDENTIALS, credentials.toString());
-                editor.apply();
-                
-                JSObject result = new JSObject();
-                result.put("success", true);
-                call.resolve(result);
-            } else {
-                call.reject("Credential not found");
-            }
+            call.resolve();
         } catch (Exception e) {
-            Log.e(TAG, "Failed to delete credential", e);
-            call.reject("Failed to delete credential: " + e.getMessage());
+            Log.e(TAG, "Failed to delete credentials", e);
+            call.reject("Failed to delete credentials: " + e.getMessage());
         }
     }
     
     @PluginMethod
-    public void clearSession(PluginCall call) {
-        SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.remove(PREF_SESSION_TOKEN);
-        editor.remove(PREF_SESSION_EXPIRY);
-        editor.apply();
-        
-        JSObject result = new JSObject();
-        result.put("success", true);
-        call.resolve(result);
-    }
-    
-    @PluginMethod
-    public void setConfiguration(PluginCall call) {
+    public void configure(PluginCall call) {
         JSObject config = call.getObject("config");
         
         if (config != null) {
-            sessionDuration = config.getLong("sessionDuration", sessionDuration);
+            // getLong doesn't support default values, so we need to check if it exists
+            if (config.has("sessionDuration")) {
+                try {
+                    sessionDuration = config.getLong("sessionDuration");
+                } catch (JSONException e) {
+                    // Keep default value
+                }
+            }
             encryptionSecret = config.getString("encryptionSecret", encryptionSecret);
             
             JSObject uiConfig = config.getJSObject("uiConfig");
@@ -370,124 +313,81 @@ public class BiometricAuthPlugin extends Plugin {
                 // but we'll store them for consistency
             }
             
-            JSObject fallbackConfig = config.getJSObject("fallbackConfig");
-            if (fallbackConfig != null) {
-                allowDeviceCredential = fallbackConfig.getBoolean("allowDeviceCredential", allowDeviceCredential);
+            JSONArray fallbackMethods = null;
+            try {
+                fallbackMethods = config.getJSONArray("fallbackMethods");
+                if (fallbackMethods != null && fallbackMethods.length() > 0) {
+                    // Check if any device credential methods are allowed
+                    allowDeviceCredential = false;
+                    for (int i = 0; i < fallbackMethods.length(); i++) {
+                        String method = fallbackMethods.getString(i);
+                        if (method.equals("passcode") || method.equals("pattern") || method.equals("pin")) {
+                            allowDeviceCredential = true;
+                            break;
+                        }
+                    }
+                }
+            } catch (JSONException e) {
+                // Keep default value
             }
             
-            maxAttempts = config.getInteger("maxAttempts", maxAttempts);
-            lockoutDuration = config.getInteger("lockoutDuration", lockoutDuration);
+            if (config.has("maxAttempts")) {
+                maxAttempts = config.getInt("maxAttempts", maxAttempts);
+            }
+            if (config.has("lockoutDuration")) {
+                lockoutDuration = config.getInt("lockoutDuration", lockoutDuration);
+            }
         }
         
-        JSObject result = new JSObject();
-        result.put("success", true);
-        call.resolve(result);
+        call.resolve();
     }
     
     // Helper methods
-    
-    private boolean isSessionValid() {
-        SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        long expiry = prefs.getLong(PREF_SESSION_EXPIRY, 0);
-        return System.currentTimeMillis() < expiry;
-    }
-    
-    private String getSessionToken() {
-        SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getString(PREF_SESSION_TOKEN, null);
-    }
-    
-    private String createSession() {
-        String token = UUID.randomUUID().toString();
-        long expiry = System.currentTimeMillis() + sessionDuration;
-        
-        SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(PREF_SESSION_TOKEN, token);
-        editor.putLong(PREF_SESSION_EXPIRY, expiry);
-        editor.apply();
-        
-        return token;
-    }
-    
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private void generateSecretKey() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+    private void generateSecretKey() throws NoSuchAlgorithmException, NoSuchProviderException,
+            InvalidAlgorithmParameterException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE);
-        
-        KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setUserAuthenticationRequired(false) // We handle auth separately
-            .build();
-        
+        KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setUserAuthenticationRequired(false)
+                .build();
         keyGenerator.init(keyGenParameterSpec);
         keyGenerator.generateKey();
     }
     
     private String encryptData(String data) throws Exception {
         SecretKey secretKey = (SecretKey) keyStore.getKey(KEY_ALIAS, null);
-        cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         
         byte[] iv = cipher.getIV();
-        byte[] encryption = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
         
         // Combine IV and encrypted data
-        byte[] combined = new byte[iv.length + encryption.length];
+        byte[] combined = new byte[iv.length + encrypted.length];
         System.arraycopy(iv, 0, combined, 0, iv.length);
-        System.arraycopy(encryption, 0, combined, iv.length, encryption.length);
+        System.arraycopy(encrypted, 0, combined, iv.length, encrypted.length);
         
-        return Base64.encodeToString(combined, Base64.NO_WRAP);
+        return Base64.encodeToString(combined, Base64.DEFAULT);
     }
     
     private String decryptData(String encryptedData) throws Exception {
-        byte[] combined = Base64.decode(encryptedData, Base64.NO_WRAP);
+        byte[] combined = Base64.decode(encryptedData, Base64.DEFAULT);
         
         // Extract IV and encrypted data
         byte[] iv = new byte[12]; // GCM IV is 12 bytes
-        byte[] encrypted = new byte[combined.length - 12];
-        System.arraycopy(combined, 0, iv, 0, 12);
-        System.arraycopy(combined, 12, encrypted, 0, encrypted.length);
+        byte[] encrypted = new byte[combined.length - iv.length];
+        System.arraycopy(combined, 0, iv, 0, iv.length);
+        System.arraycopy(combined, iv.length, encrypted, 0, encrypted.length);
         
         SecretKey secretKey = (SecretKey) keyStore.getKey(KEY_ALIAS, null);
-        cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        GCMParameterSpec spec = new GCMParameterSpec(128, iv);
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
         cipher.init(Cipher.DECRYPT_MODE, secretKey, spec);
         
         byte[] decrypted = cipher.doFinal(encrypted);
         return new String(decrypted, StandardCharsets.UTF_8);
-    }
-    
-    private String mapErrorCode(int errorCode) {
-        switch (errorCode) {
-            case BiometricPrompt.ERROR_CANCELED:
-                return "USER_CANCELLED";
-            case BiometricPrompt.ERROR_LOCKOUT:
-                return "TOO_MANY_ATTEMPTS";
-            case BiometricPrompt.ERROR_LOCKOUT_PERMANENT:
-                return "LOCKOUT_PERMANENT";
-            case BiometricPrompt.ERROR_NO_BIOMETRICS:
-                return "NOT_ENROLLED";
-            case BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL:
-                return "NO_DEVICE_CREDENTIAL";
-            case BiometricPrompt.ERROR_HW_NOT_PRESENT:
-                return "NO_HARDWARE";
-            case BiometricPrompt.ERROR_HW_UNAVAILABLE:
-                return "HARDWARE_UNAVAILABLE";
-            case BiometricPrompt.ERROR_NEGATIVE_BUTTON:
-                return "USER_CANCELLED";
-            case BiometricPrompt.ERROR_NO_SPACE:
-                return "NO_SPACE";
-            case BiometricPrompt.ERROR_TIMEOUT:
-                return "TIMEOUT";
-            case BiometricPrompt.ERROR_USER_CANCELED:
-                return "USER_CANCELLED";
-            case BiometricPrompt.ERROR_VENDOR:
-                return "VENDOR_ERROR";
-            default:
-                return "UNKNOWN_ERROR";
-        }
     }
 }
