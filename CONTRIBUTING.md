@@ -31,6 +31,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 ## Getting Started
 
 Before you begin:
+
 - Have you read the [README](README.md)?
 - Check if your issue/idea has already been reported/discussed in [Issues](https://github.com/your-repo/issues)
 - Check if your idea fits with the scope and aims of the project
@@ -42,12 +43,14 @@ Before you begin:
 Before creating bug reports, please check existing issues as you might find out that you don't need to create one. When you are creating a bug report, please include as many details as possible:
 
 **Bug Report Template:**
+
 ```markdown
 **Description**
 A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
@@ -60,10 +63,11 @@ What you expected to happen.
 If applicable, add screenshots.
 
 **Environment:**
- - OS: [e.g. iOS 16, Android 13]
- - Plugin Version: [e.g. 1.0.0]
- - Capacitor Version: [e.g. 7.4.1]
- - Device: [e.g. iPhone 14, Samsung Galaxy S23]
+
+- OS: [e.g. iOS 16, Android 13]
+- Plugin Version: [e.g. 1.0.0]
+- Capacitor Version: [e.g. 7.4.1]
+- Device: [e.g. iPhone 14, Samsung Galaxy S23]
 
 **Additional context**
 Any other context about the problem.
@@ -101,17 +105,20 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 ### Setup Steps
 
 1. **Clone the repository**
+
    ```bash
-   git clone https://github.com/your-repo/capacitor-biometric-auth.git
-   cd capacitor-biometric-auth
+   git clone https://github.com/your-repo/capacitor-biometric-authentication.git
+   cd capacitor-biometric-authentication
    ```
 
 2. **Install dependencies**
+
    ```bash
    yarn install
    ```
 
 3. **Build the plugin**
+
    ```bash
    yarn build
    ```
@@ -146,7 +153,7 @@ yarn dev
 ## Project Structure
 
 ```
-capacitor-biometric-auth/
+capacitor-biometric-authentication/
 ├── src/                    # TypeScript source files
 │   ├── definitions.ts      # Plugin interface definitions
 │   ├── index.ts           # Main entry point
@@ -173,12 +180,14 @@ capacitor-biometric-auth/
 ### Native Code
 
 #### Android (Java)
+
 - Follow Android coding conventions
 - Use AndroidX libraries
 - Handle permissions properly
 - Support Android API 23+ (Android 6.0+)
 
 #### iOS (Swift)
+
 - Follow Swift naming conventions
 - Use Swift 5.1+
 - Support iOS 13.0+
@@ -192,6 +201,7 @@ capacitor-biometric-auth/
 - Reference issues and pull requests liberally after the first line
 
 Example:
+
 ```
 feat: add session encryption for web platform
 
@@ -207,6 +217,7 @@ Fixes #123
 ### Unit Tests
 
 Currently, unit tests are being set up. When contributing, please:
+
 - Write tests for new functionality
 - Ensure all tests pass before submitting PR
 - Aim for high test coverage
@@ -214,6 +225,7 @@ Currently, unit tests are being set up. When contributing, please:
 ### Manual Testing
 
 Test your changes on:
+
 - [ ] Web (Chrome, Safari, Firefox)
 - [ ] Android (API 23+)
 - [ ] iOS (iOS 13+)
@@ -221,6 +233,7 @@ Test your changes on:
 ### Testing Checklist
 
 Before submitting a PR, ensure:
+
 - [ ] Code builds without errors (`yarn build`)
 - [ ] Linter passes (`yarn lint`)
 - [ ] Code is formatted (`yarn prettier`)
@@ -244,16 +257,19 @@ Before submitting a PR, ensure:
 ## Platform-Specific Guidelines
 
 ### Web Implementation
+
 - Use Web Authentication API standards
 - Ensure cross-browser compatibility
 - Handle cases where WebAuthn is not available
 
 ### Android Implementation
+
 - Use BiometricPrompt API
 - Handle different Android versions gracefully
 - Properly manage Android permissions
 
 ### iOS Implementation
+
 - Use LocalAuthentication framework
 - Handle Face ID permission properly
 - Support both Face ID and Touch ID
@@ -261,6 +277,7 @@ Before submitting a PR, ensure:
 ## Release Process
 
 Maintainers will handle releases, but for reference:
+
 1. Update version in package.json
 2. Update CHANGELOG.md
 3. Build and test thoroughly

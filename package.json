@@ -1,5 +1,5 @@
 {
-  "name": "capacitor-biometric-auth",
+  "name": "capacitor-biometric-authentication",
   "version": "0.0.1",
   "description": "Biometric Authentication Plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
