@@ -15,6 +15,7 @@
     "@capacitor/android": "^7.4.1",
     "@capacitor/core": "^7.4.1",
     "@capacitor/ios": "^7.4.1",
+    "@ionic/pwa-elements": "^3.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
