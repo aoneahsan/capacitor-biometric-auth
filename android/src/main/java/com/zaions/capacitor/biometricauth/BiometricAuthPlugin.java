@@ -332,10 +332,18 @@ public class BiometricAuthPlugin extends Plugin {
             }
             
             if (config.has("maxAttempts")) {
-                maxAttempts = config.getInt("maxAttempts", maxAttempts);
+                try {
+                    maxAttempts = config.getInt("maxAttempts");
+                } catch (JSONException e) {
+                    // Keep default value
+                }
             }
             if (config.has("lockoutDuration")) {
-                lockoutDuration = config.getInt("lockoutDuration", lockoutDuration);
+                try {
+                    lockoutDuration = config.getInt("lockoutDuration");
+                } catch (JSONException e) {
+                    // Keep default value
+                }
             }
         }
         
