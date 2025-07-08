@@ -16,14 +16,14 @@ A comprehensive biometric authentication plugin for Capacitor that provides secu
 ## Installation
 
 ```bash
-npm install @capacitor-community/biometric-auth
+npm install capacitor-biometric-auth
 npx cap sync
 ```
 
 ## Basic Usage
 
 ```typescript
-import { BiometricAuth } from '@capacitor-community/biometric-auth';
+import { BiometricAuth } from 'capacitor-biometric-auth';
 
 // Check if biometric authentication is available
 const checkBiometric = async () => {
