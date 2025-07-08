@@ -33,7 +33,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 Before you begin:
 
 - Have you read the [README](README.md)?
-- Check if your issue/idea has already been reported/discussed in [Issues](https://github.com/your-repo/issues)
+- Check if your issue/idea has already been reported/discussed in [Issues](https://github.com/aoneahsan/capacitor-biometric-authentication/issues)
 - Check if your idea fits with the scope and aims of the project
 
 ## How Can I Contribute?
@@ -107,7 +107,7 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/your-repo/capacitor-biometric-authentication.git
+   git clone https://github.com/aoneahsan/capacitor-biometric-authentication.git
    cd capacitor-biometric-authentication
    ```
 

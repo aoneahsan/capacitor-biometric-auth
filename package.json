@@ -24,10 +24,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aoneahsan/capacitor-biometric-auth.git"
+    "url": "git+https://github.com/aoneahsan/capacitor-biometric-authentication.git"
   },
   "bugs": {
-    "url": "https://github.com/aoneahsan/capacitor-biometric-auth/issues"
+    "url": "https://github.com/aoneahsan/capacitor-biometric-authentication/issues"
   },
   "keywords": [
     "capacitor",

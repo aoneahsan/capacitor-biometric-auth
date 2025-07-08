@@ -208,10 +208,18 @@ npm run dev
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
+## Support
+
+For support, bug reports, and feature requests, please use the following channels:
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/aoneahsan/capacitor-biometric-authentication/issues)
+- **Email**: [aoneahsan@gmail.com](mailto:aoneahsan@gmail.com)
+- **LinkedIn**: [Connect on LinkedIn](https://linkedin.com/in/aoneahsan)
+
 ## License
 
 MIT
 
 ## Credits
 
-Created by [Ahsan Mahmood](https://aoneahsan.com) for the Capacitor Community.
+Created by [Ahsan Mahmood](https://aoneahsan.com) at [Zaions](https://zaions.com) for the Capacitor Community.
