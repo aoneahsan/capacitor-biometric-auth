@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+public
+android
+ios
+apps-resources
+.history
+.vscode
+assets
+project-record
+project-record-ignore

@@ -1,0 +1,22 @@
+# when changing the version number (here or in package.json), make sure to keep the version|versionName same in both files (JFC)
+
+vars:
+  BUNDLE_ID:
+    default: com.zaions.biometric_auth
+  PRODUCT_NAME:
+    default: "Biometric Auth"
+
+platforms:
+  ios:
+    targets:
+      App:
+        bundleId: $BUNDLE_ID
+        version: 1.0.0
+        buildNumber: 1
+        productName: $PRODUCT_NAME
+        displayName: $PRODUCT_NAME
+
+  android:
+    packageName: $BUNDLE_ID
+    versionName: 1.0.0
+    versionCode: 1

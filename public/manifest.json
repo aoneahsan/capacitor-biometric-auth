@@ -1,0 +1,30 @@
+{
+  "id": "com.zaions.biometric_auth",
+  "short_name": "Biometric Auth",
+  "name": "Biometric Auth",
+  "description": "Biometric Auth Plugin for Capacitor",
+  "dir": "auto",
+  "lang": "en-US",
+  "orientation": "any",
+  "scope": ".",
+  "prefer_related_applications": true,
+  "categories": ["biometric auth", "biometric auth plugin", "biometric auth plugin for capacitor", "zaions", "aoneahsan", "ahsan mahmood"],
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.zaions.biometric_auth"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1d78bd",
+  "background_color": "#eeeeee",
+  "icons": [
+    {
+      "src": "images/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
