@@ -30,7 +30,8 @@
       "WebFetch(domain:www.helppier.com)",
       "WebFetch(domain:www.chameleon.io)",
       "WebFetch(domain:www.userlane.com)",
-      "WebFetch(domain:www.pendo.io)"
+      "WebFetch(domain:www.pendo.io)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
