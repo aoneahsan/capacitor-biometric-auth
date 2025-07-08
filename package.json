@@ -9,6 +9,7 @@
   "files": [
     "android/src/main/",
     "android/build.gradle",
+    "android/variables.gradle",
     "android/gradle.properties",
     "android/settings.gradle",
     "android/proguard-rules.pro",
