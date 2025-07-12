@@ -1,6 +1,6 @@
 {
   "name": "capacitor-biometric-authentication",
-  "version": "0.0.7",
+  "version": "1.0.0",
   "description": "Biometric Authentication Plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -52,18 +52,18 @@
     "swiftlint": "cd ios && swiftlint lint --fix --format --path Plugin --verbose"
   },
   "devDependencies": {
-    "@capacitor/android": "^7.4.1",
-    "@capacitor/core": "^7.4.1",
-    "@capacitor/ios": "^7.4.1",
+    "@capacitor/android": "^7.4.2",
+    "@capacitor/core": "^7.4.2",
+    "@capacitor/ios": "^7.4.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
-    "@types/node": "^24.0.10",
+    "@types/node": "^24.0.13",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "eslint": "^9.30.1",
+    "eslint": "^9.31.0",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.44.2",
+    "rollup": "^4.45.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
