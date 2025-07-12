@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.zaions.biometric_auth',
+  appId: 'com.aoneahsan.biometric_auth',
   appName: 'capacitor-biometric-authentication',
   webDir: 'dist',
 };

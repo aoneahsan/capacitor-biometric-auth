@@ -7,7 +7,7 @@ const googleWebClientID = process.env.VITE_GOOGLE_MOBILE_AUTH_CLIENT_ID;
 const googleIosClientID = process.env.VITE_GOOGLE_AUTH_IOS_APP_CLIENT_ID;
 
 const capacitorConfig: CapacitorConfig = {
-  appId: 'com.zaions.biometric_auth',
+  appId: 'com.aoneahsan.biometric_auth',
   appName: 'Biometric Auth',
   webDir: 'build',
   backgroundColor: '#ffffff',

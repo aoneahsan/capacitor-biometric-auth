@@ -2,7 +2,7 @@
 
 vars:
   BUNDLE_ID:
-    default: com.zaions.biometric_auth
+    default: com.aoneahsan.biometric_auth
   PRODUCT_NAME:
     default: 'Biometric Auth'
 

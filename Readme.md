@@ -222,4 +222,4 @@ MIT
 
 ## Credits
 
-Created by [Ahsan Mahmood](https://aoneahsan.com) at [Zaions](https://zaions.com) for the Capacitor Community.
+Created by [Ahsan Mahmood](https://aoneahsan.com) for the Capacitor Community.

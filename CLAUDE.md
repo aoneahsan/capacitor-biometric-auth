@@ -58,7 +58,7 @@ The plugin should follow Capacitor's plugin architecture:
 
 ### Configuration
 
-- **Bundle ID**: `com.zaions.biometric_auth`
+- **Bundle ID**: `com.aoneahsan.biometric_auth`
 - **App Name**: "Biometric Auth"
 - **Build Output**: `build/` directory
 - **TypeScript**: Strict mode with ESNext target

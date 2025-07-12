@@ -9,7 +9,7 @@ public class BiometricAuthPlugin: CAPPlugin {
     private let SESSION_TOKEN_KEY = "session_token"
     private let SESSION_EXPIRY_KEY = "session_expiry"
     private let STORED_CREDENTIALS_KEY = "stored_credentials"
-    private let KEYCHAIN_SERVICE = "com.zaions.biometricauth"
+    private let KEYCHAIN_SERVICE = "com.aoneahsan.biometricauth"
     
     // Configuration
     private var sessionDuration: TimeInterval = 3600 // 1 hour default

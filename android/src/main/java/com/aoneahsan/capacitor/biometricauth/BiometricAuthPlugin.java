@@ -1,4 +1,4 @@
-package com.zaions.capacitor.biometricauth;
+package com.aoneahsan.capacitor.biometricauth;
 
 import android.app.Activity;
 import android.content.Context;

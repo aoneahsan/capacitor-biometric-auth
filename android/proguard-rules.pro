@@ -21,4 +21,4 @@
 #-renamesourcefileattribute SourceFile
 
 # Rules for Capacitor plugins
--keep class com.zaions.capacitor.biometricauth.** { *; }
+-keep class com.aoneahsan.capacitor.biometricauth.** { *; }
