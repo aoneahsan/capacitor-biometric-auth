@@ -4,102 +4,179 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Capacitor plugin development project for implementing biometric authentication across Android, iOS, and Web platforms. The plugin aims to provide a secure, type-safe, and framework-independent solution for biometric authentication.
+This is a Capacitor plugin for biometric authentication across Android, iOS, and Web platforms. The plugin provides a secure, type-safe, and framework-independent solution for biometric authentication with features like session management, encryption, and multiple authentication methods.
 
 ## Development Commands
 
-### Essential Commands
+### Plugin Development (Main Package)
+```bash
+# Build the plugin
+npm run build
 
-- `yarn dev` - Start development server on port 3000
-- `yarn build` - Build the project
-- `yarn lint` - Run ESLint for code quality checks
-- `yarn prettier` - Format code with Prettier
+# Watch for TypeScript changes
+npm run watch
 
-### Capacitor Commands
+# Run linting
+npm run lint
 
-- `yarn cap:sync` - Full sync (install deps, build, and sync with native projects)
-- `yarn cap:android:run` - Run on Android device/emulator
-- `yarn cap:ios:run` - Run on iOS device/simulator
-- `yarn cap:android:open` - Open Android Studio
-- `yarn cap:ios:open` - Open Xcode
+# Format code
+npm run prettier
 
-### Asset Generation
+# Clean build artifacts
+npm run clean
 
-- `yarn gen:assets` - Generate both Android and iOS app icons and splash screens
-- `yarn gen:android:assets` - Generate Android assets only
-- `yarn gen:ios:assets` - Generate iOS assets only
+# Lint iOS Swift code
+npm run swiftlint
+```
 
-### Configuration Management
+### Example App Development
+Navigate to the `example/` directory for testing:
+```bash
+cd example
 
-- `yarn sync:apps-config` - Apply native app configuration using Trapeze
-- `yarn update:ios:info` - Update iOS app configuration
-- `yarn update:android:info` - Update Android app configuration
+# Development server
+npm run dev
+
+# Build and sync with native projects
+npm run cap:sync
+
+# Run on platforms
+npm run cap:android:run
+npm run cap:ios:run
+```
 
 ## Architecture and Code Structure
 
-### Technology Stack
+### Plugin Architecture
 
-- **Framework**: React with TypeScript (strict mode enabled)
-- **Build Tool**: Vite
-- **Platform**: Capacitor v7.4.1 for cross-platform mobile development
-- **Package Manager**: Yarn
-- **Path Alias**: `@/` maps to `src/` directory
+```
+├── src/                        # TypeScript source
+│   ├── definitions.ts          # Complete API interfaces and types
+│   ├── index.ts               # Plugin registration
+│   ├── web.ts                 # Web implementation (WebAuthn)
+│   └── utils/                 # Utility functions
+│       ├── index.ts           # Utils exports
+│       └── session.ts         # Session management
+├── android/                    # Android native implementation
+│   └── src/main/java/.../
+│       └── BiometricAuthPlugin.java  # BiometricPrompt API
+├── ios/                        # iOS native implementation
+│   └── Plugin/
+│       └── BiometricAuthPlugin.swift  # LocalAuthentication framework
+└── example/                    # React example app for testing
+```
 
-### Plugin Architecture (To Be Implemented)
+### Key Technologies
 
-The plugin should follow Capacitor's plugin architecture:
+- **Build System**: Rollup for bundling, TypeScript for compilation
+- **Native Android**: BiometricPrompt API with Android Keystore
+- **Native iOS**: LocalAuthentication framework with Keychain
+- **Web**: WebAuthn API for browser biometric support
+- **Example App**: React + Vite for testing
 
-1. **Core Plugin Interface** - Define TypeScript interfaces in `src/definitions.ts`
-2. **Web Implementation** - Web Authentication API implementation in `src/web.ts`
-3. **Native Implementations**:
-   - Android: Using BiometricPrompt API
-   - iOS: Using LocalAuthentication framework
-4. **Plugin Facade** - Main plugin entry point that delegates to platform implementations
+### Plugin API Methods
 
-### Configuration
+1. `isAvailable()` - Check biometric availability
+2. `getSupportedBiometrics()` - Get available biometric types
+3. `authenticate(options?)` - Perform authentication
+4. `deleteCredentials()` - Clear stored credentials
+5. `configure(config)` - Set plugin configuration
 
-- **Bundle ID**: `com.aoneahsan.biometric_auth`
-- **App Name**: "Biometric Auth"
-- **Build Output**: `build/` directory
-- **TypeScript**: Strict mode with ESNext target
+### Current Implementation Status
 
-## Development Guidelines
+- ✅ Complete TypeScript definitions and interfaces
+- ✅ Web implementation with WebAuthn
+- ✅ Android native implementation
+- ✅ iOS native implementation
+- ⚠️  Utils implementation (placeholders exist)
+- ✅ Example app structure
 
-### From README Requirements
+## Development Workflow
 
-1. **Type Safety**: Ensure all APIs are fully typed with TypeScript
-2. **Security First**: Implement secure session management and encryption
-3. **Framework Independent**: Do not depend on any specific frontend framework
-4. **Configuration Options**: Provide configurable options including:
-   - Session validity duration
-   - Encryption secrets
-   - UI customization options
-   - Fallback authentication methods
-5. **Easy Initialization**: Plugin should work with minimal configuration
+### Making Plugin Changes
 
-### Platform-Specific Resources
+1. Edit TypeScript files in `src/`
+2. Run `npm run build` to compile and bundle
+3. For native changes:
+   - Android: Edit Java files in `android/src/main/java/`
+   - iOS: Edit Swift files in `ios/Plugin/`
+4. Test changes in the example app:
+   ```bash
+   cd example
+   npm run cap:sync
+   npm run cap:android:run  # or cap:ios:run
+   ```
 
-- **Android**: [Biometric Auth API](https://developer.android.com/identity/sign-in/biometric-auth)
-- **iOS**: [LocalAuthentication Framework](https://developer.apple.com/documentation/localauthentication)
-- **Web**: [Web Authentication API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API)
+### Testing on Devices
 
-### Code Style
+1. Ensure the plugin is built: `npm run build` (in root)
+2. Link the plugin in example app (if not already linked)
+3. Sync and run: `npm run cap:sync` then platform-specific run command
 
-- Indent with 2 spaces (enforced by .editorconfig)
-- Use LF line endings
-- UTF-8 encoding
-- Trim trailing whitespace
-- Include final newline in files
+### Publishing Updates
 
-## Current Project State
+1. Update version in `package.json`
+2. Update `CHANGELOG.md`
+3. Run `npm run build`
+4. Publish: `npm publish`
 
-The project is in initial setup phase. The main entry point (`src/main.tsx`) currently only renders a simple heading. Core plugin functionality needs to be implemented following Capacitor plugin development patterns.
+## Platform-Specific Notes
 
-## Next Implementation Steps
+### Android
+- Minimum SDK: 23 (Android 6.0)
+- Uses BiometricPrompt for modern biometric authentication
+- Stores encrypted credentials in SharedPreferences
+- Supports fingerprint, face recognition, and device credentials
 
-1. Create plugin definition interfaces in `src/definitions.ts`
-2. Implement web version using Web Authentication API
-3. Set up native project structure for Android and iOS implementations
-4. Create example app for testing the plugin functionality
-5. Add comprehensive TypeScript types for all configuration options
-6. Implement secure session management and encryption utilities
+### iOS
+- Minimum iOS version: 12.0
+- Uses LocalAuthentication framework
+- Supports Touch ID and Face ID
+- Stores credentials in Keychain
+
+### Web
+- Uses WebAuthn API where available
+- Falls back to session-based authentication
+- Stores encrypted data in localStorage
+
+## Code Style Guidelines
+
+- TypeScript strict mode enabled
+- 2-space indentation (enforced by .editorconfig)
+- Use async/await for asynchronous operations
+- Follow existing patterns in the codebase
+- All public APIs must be fully typed
+
+## Security Considerations
+
+- Never store sensitive data in plain text
+- Use platform-specific secure storage (Keystore/Keychain)
+- Implement proper session management
+- Clear credentials on app uninstall
+- Handle authentication failures gracefully
+
+## Common Development Tasks
+
+### Adding a New Method
+1. Define the method interface in `src/definitions.ts`
+2. Implement in `src/web.ts` for web platform
+3. Implement in native files for Android/iOS
+4. Add to the plugin exports
+5. Test in the example app
+
+### Debugging Native Code
+- **Android**: Open in Android Studio via the example app
+- **iOS**: Open in Xcode via the example app
+- Use platform-specific debugging tools and logs
+
+### Updating Dependencies
+```bash
+# Update Capacitor to latest
+npm update @capacitor/core @capacitor/android @capacitor/ios
+
+# Update dev dependencies
+npm update
+
+# Check for outdated packages
+npm outdated
+```
