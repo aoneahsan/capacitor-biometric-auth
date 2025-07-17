@@ -10,6 +10,14 @@ import {
   BiometricUnavailableReason,
   BiometricErrorCode,
 } from './definitions';
+import {
+  mergeCreateOptions,
+  mergeGetOptions,
+  arrayBufferToBase64,
+  storeCredentialId,
+  getStoredCredentialIds,
+  clearStoredCredentialIds,
+} from './utils/webauthn';
 
 export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
   private config: BiometricAuthConfig = {
@@ -79,6 +87,7 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
     options?: BiometricAuthOptions
   ): Promise<BiometricAuthResult> {
     try {
+      // Check availability first
       const availability = await this.isAvailable();
       if (!availability.available) {
         return {
@@ -92,60 +101,155 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
         };
       }
 
-      // Generate challenge
-      const challenge = new Uint8Array(32);
-      crypto.getRandomValues(challenge);
+      // Get stored credentials for the user
+      const userId = options?.webAuthnOptions?.get?.rpId || 
+                     options?.webAuthnOptions?.create?.user?.name;
+      const storedCredentialIds = getStoredCredentialIds(userId);
 
-      // Create credential request options
-      const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions =
-        {
-          challenge,
-          timeout: 60000,
-          userVerification: 'required',
-          rpId: window.location.hostname,
-        };
-
-      // If user has saved credentials, use them
-      if (options?.saveCredentials) {
-        // In a real implementation, we would retrieve saved credential IDs
-        // For now, we'll use WebAuthn's discoverable credentials feature
-        publicKeyCredentialRequestOptions.allowCredentials = [];
+      // If no stored credentials and user wants to save credentials, register instead
+      if (storedCredentialIds.length === 0 && options?.saveCredentials) {
+        return this.register(options);
       }
 
-      // Create the credential
-      const credential = (await navigator.credentials.create({
-        publicKey: {
-          challenge,
+      // If user provided specific WebAuthn get options, use them
+      if (options?.webAuthnOptions?.get) {
+        return this.authenticateWithCredentials(options);
+      }
+
+      // If we have stored credentials, try to authenticate with them
+      if (storedCredentialIds.length > 0) {
+        return this.authenticateWithCredentials(options);
+      }
+
+      // No credentials found, register new ones
+      return this.register(options);
+    } catch (error) {
+      return this.handleWebAuthnError(error);
+    }
+  }
+
+  private async authenticateWithCredentials(
+    options?: BiometricAuthOptions
+  ): Promise<BiometricAuthResult> {
+    try {
+      // Get stored credential IDs
+      const userId = options?.webAuthnOptions?.get?.rpId || 
+                     options?.webAuthnOptions?.create?.user?.name;
+      const storedCredentialIds = getStoredCredentialIds(userId);
+
+      // Prepare allowed credentials
+      const allowCredentials = storedCredentialIds.map(id => ({
+        id: Uint8Array.from(atob(id), c => c.charCodeAt(0)),
+        type: 'public-key' as PublicKeyCredentialType,
+        transports: ['internal'] as AuthenticatorTransport[],
+      }));
+
+      // Merge user options with defaults
+      const getOptions = mergeGetOptions(
+        options?.webAuthnOptions?.get,
+        {
+          rpId: window.location.hostname,
+          userVerification: 'required',
+          allowCredentials: allowCredentials.length > 0 ? allowCredentials : undefined,
+        }
+      );
+
+      // Get the credential
+      const credential = (await navigator.credentials.get({
+        publicKey: getOptions,
+      })) as PublicKeyCredential;
+
+      if (credential && credential.response instanceof AuthenticatorAssertionResponse) {
+        // Generate session token
+        const sessionId = crypto.randomUUID();
+        const credentialId = arrayBufferToBase64(credential.rawId);
+        const token = btoa(
+          JSON.stringify({
+            credentialId,
+            timestamp: Date.now(),
+            sessionId,
+            type: 'authentication',
+          })
+        );
+
+        // Store session
+        const expiresAt =
+          Date.now() + (this.config.sessionDuration || 3600) * 1000;
+        this.sessions.set(sessionId, { token, expiresAt });
+
+        // Clean up expired sessions
+        this.cleanupExpiredSessions();
+
+        return {
+          success: true,
+          token,
+          sessionId,
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          code: BiometricErrorCode.AUTHENTICATION_FAILED,
+          message: 'Failed to authenticate with credential',
+        },
+      };
+    } catch (error) {
+      return this.handleWebAuthnError(error);
+    }
+  }
+
+  async register(
+    options?: BiometricAuthOptions
+  ): Promise<BiometricAuthResult> {
+    try {
+      // Check availability first
+      const availability = await this.isAvailable();
+      if (!availability.available) {
+        return {
+          success: false,
+          error: {
+            code: BiometricErrorCode.NOT_AVAILABLE,
+            message:
+              availability.errorMessage ||
+              'Biometric authentication not available',
+          },
+        };
+      }
+
+      // Merge user options with defaults
+      const createOptions = mergeCreateOptions(
+        options?.webAuthnOptions?.create,
+        {
           rp: {
             name: options?.title || 'Biometric Authentication',
-            id: window.location.hostname,
           },
-          user: {
-            id: new TextEncoder().encode(crypto.randomUUID()),
-            name: 'user@' + window.location.hostname,
-            displayName: 'User',
-          },
-          pubKeyCredParams: [
-            { alg: -7, type: 'public-key' }, // ES256
-            { alg: -257, type: 'public-key' }, // RS256
-          ],
           authenticatorSelection: {
             authenticatorAttachment: 'platform',
             userVerification: 'required',
           },
-          timeout: 60000,
-          attestation: 'none',
-        },
+        }
+      );
+
+      // Create the credential
+      const credential = (await navigator.credentials.create({
+        publicKey: createOptions,
       })) as PublicKeyCredential;
 
-      if (credential) {
+      if (credential && credential.response instanceof AuthenticatorAttestationResponse) {
+        // Store credential ID for future authentication
+        const credentialId = arrayBufferToBase64(credential.rawId);
+        const userId = options?.webAuthnOptions?.create?.user?.name;
+        storeCredentialId(credentialId, userId);
+
         // Generate session token
         const sessionId = crypto.randomUUID();
         const token = btoa(
           JSON.stringify({
-            credentialId: credential.id,
+            credentialId,
             timestamp: Date.now(),
             sessionId,
+            type: 'registration',
           })
         );
 
@@ -172,43 +276,7 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
         },
       };
     } catch (error) {
-      // Handle specific error cases
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError') {
-          return {
-            success: false,
-            error: {
-              code: BiometricErrorCode.USER_CANCELLED,
-              message: 'User cancelled the authentication',
-            },
-          };
-        } else if (error.name === 'NotSupportedError') {
-          return {
-            success: false,
-            error: {
-              code: BiometricErrorCode.NOT_AVAILABLE,
-              message: 'Biometric authentication not supported',
-            },
-          };
-        } else if (error.name === 'InvalidStateError') {
-          return {
-            success: false,
-            error: {
-              code: BiometricErrorCode.INVALID_CONTEXT,
-              message: 'Invalid authentication context',
-            },
-          };
-        }
-      }
-
-      return {
-        success: false,
-        error: {
-          code: BiometricErrorCode.UNKNOWN,
-          message:
-            error instanceof Error ? error.message : 'Unknown error occurred',
-        },
-      };
+      return this.handleWebAuthnError(error);
     }
   }
 
@@ -216,15 +284,11 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
     // Clear all sessions
     this.sessions.clear();
 
-    // In a real implementation, we would also:
-    // 1. Clear stored credential IDs from local storage
-    // 2. Potentially revoke credentials on the server
-    // 3. Clear any cached authentication data
+    // Clear stored credential IDs
+    clearStoredCredentialIds();
 
-    // For WebAuthn, credentials are managed by the browser/OS
-    // We can't directly delete them, but we can clear our references
+    // Clear any other stored data
     try {
-      // Clear any stored credential data from localStorage
       const keys = Object.keys(localStorage).filter((key) =>
         key.startsWith('biometric_auth_')
       );
@@ -260,5 +324,52 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
     });
 
     expiredSessions.forEach((id) => this.sessions.delete(id));
+  }
+
+  private handleWebAuthnError(error: unknown): BiometricAuthResult {
+    if (error instanceof Error) {
+      if (error.name === 'NotAllowedError') {
+        return {
+          success: false,
+          error: {
+            code: BiometricErrorCode.USER_CANCELLED,
+            message: 'User cancelled the authentication',
+          },
+        };
+      } else if (error.name === 'NotSupportedError') {
+        return {
+          success: false,
+          error: {
+            code: BiometricErrorCode.NOT_AVAILABLE,
+            message: 'Biometric authentication not supported',
+          },
+        };
+      } else if (error.name === 'InvalidStateError') {
+        return {
+          success: false,
+          error: {
+            code: BiometricErrorCode.INVALID_CONTEXT,
+            message: 'Invalid authentication context',
+          },
+        };
+      } else if (error.name === 'SecurityError') {
+        return {
+          success: false,
+          error: {
+            code: BiometricErrorCode.INVALID_CONTEXT,
+            message: 'Security requirements not met',
+          },
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: {
+        code: BiometricErrorCode.UNKNOWN,
+        message:
+          error instanceof Error ? error.message : 'Unknown error occurred',
+      },
+    };
   }
 }

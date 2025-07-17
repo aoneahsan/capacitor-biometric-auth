@@ -11,8 +11,16 @@ export interface BiometricAuthPlugin {
 
   /**
    * Authenticate using biometric authentication
+   * For web platform: This will intelligently choose between register() and authenticate()
+   * based on whether credentials exist for the user
    */
   authenticate(options?: BiometricAuthOptions): Promise<BiometricAuthResult>;
+
+  /**
+   * Register new biometric credentials (Web platform specific)
+   * Creates new WebAuthn credentials for the user
+   */
+  register?(options?: BiometricAuthOptions): Promise<BiometricAuthResult>;
 
   /**
    * Delete stored biometric credentials
@@ -80,6 +88,122 @@ export interface BiometricAuthOptions {
    * Whether to save credentials for future use
    */
   saveCredentials?: boolean;
+  /**
+   * WebAuthn specific options for web platform
+   */
+  webAuthnOptions?: WebAuthnOptions;
+}
+
+export interface WebAuthnOptions {
+  /**
+   * Options for credential creation (registration)
+   */
+  create?: WebAuthnCreateOptions;
+  /**
+   * Options for credential request (authentication)
+   */
+  get?: WebAuthnGetOptions;
+}
+
+export interface WebAuthnCreateOptions {
+  /**
+   * Challenge from the relying party's server
+   */
+  challenge?: ArrayBuffer | Uint8Array | string;
+  /**
+   * Relying party information
+   */
+  rp?: {
+    id?: string;
+    name?: string;
+  };
+  /**
+   * User account information
+   */
+  user?: {
+    id?: ArrayBuffer | Uint8Array | string;
+    name?: string;
+    displayName?: string;
+  };
+  /**
+   * List of supported public key credential parameters
+   */
+  pubKeyCredParams?: Array<{
+    alg: number;
+    type: 'public-key';
+  }>;
+  /**
+   * Authenticator selection criteria
+   */
+  authenticatorSelection?: {
+    authenticatorAttachment?: 'platform' | 'cross-platform';
+    requireResidentKey?: boolean;
+    residentKey?: 'discouraged' | 'preferred' | 'required';
+    userVerification?: 'discouraged' | 'preferred' | 'required';
+  };
+  /**
+   * Timeout for the operation in milliseconds
+   */
+  timeout?: number;
+  /**
+   * Attestation preference
+   */
+  attestation?: 'none' | 'indirect' | 'direct' | 'enterprise';
+  /**
+   * Attestation statement formats
+   */
+  attestationFormats?: string[];
+  /**
+   * Credentials to exclude from creation
+   */
+  excludeCredentials?: Array<{
+    id: ArrayBuffer | Uint8Array | string;
+    type: 'public-key';
+    transports?: Array<'ble' | 'hybrid' | 'internal' | 'nfc' | 'usb'>;
+  }>;
+  /**
+   * Extension inputs
+   */
+  extensions?: Record<string, any>;
+  /**
+   * Hints for user agent UI
+   */
+  hints?: Array<'security-key' | 'client-device' | 'hybrid'>;
+}
+
+export interface WebAuthnGetOptions {
+  /**
+   * Challenge from the relying party's server
+   */
+  challenge?: ArrayBuffer | Uint8Array | string;
+  /**
+   * Relying party identifier
+   */
+  rpId?: string;
+  /**
+   * List of allowed credentials
+   */
+  allowCredentials?: Array<{
+    id: ArrayBuffer | Uint8Array | string;
+    type: 'public-key';
+    transports?: Array<'ble' | 'hybrid' | 'internal' | 'nfc' | 'usb'>;
+  }>;
+  /**
+   * User verification requirement
+   */
+  userVerification?: 'discouraged' | 'preferred' | 'required';
+  /**
+   * Timeout for the operation in milliseconds
+   */
+  timeout?: number;
+  /**
+   * Extension inputs
+   */
+  extensions?: Record<string, any>;
+  /**
+   * Hints for user agent UI
+   */
+  hints?: Array<'security-key' | 'client-device' | 'hybrid'>;
 }
 
 export interface BiometricAuthResult {

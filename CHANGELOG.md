@@ -8,6 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Full WebAuthn options support for web platform
+- New `webAuthnOptions` property in `BiometricAuthOptions` interface
+- Separate `register()` method for explicit credential creation (web platform)
+- Support for all WebAuthn creation options:
+  - Custom challenge from server
+  - Full control over relying party (RP) configuration
+  - User information customization
+  - Public key algorithm preferences
+  - Authenticator selection criteria
+  - Attestation options
+  - Credential exclusion lists
+  - WebAuthn extensions
+- Support for all WebAuthn authentication options:
+  - Custom challenge handling
+  - Allowed credentials specification
+  - User verification requirements
+  - Timeout configuration
+- Utility functions for WebAuthn data conversion
+- Credential storage mechanism for managing registered credentials
+- Intelligent authentication flow that automatically chooses between registration and authentication
+
+### Changed
+- `authenticate()` method now intelligently determines whether to register new credentials or authenticate existing ones
+- Web implementation now properly uses `navigator.credentials.get()` for authentication
+- Improved error handling with specific WebAuthn error mapping
+
+### Fixed
+- WebAuthn implementation now follows the specification correctly
+- Proper separation between credential creation and assertion
+
+## [1.0.0] - 2024-01-XX
+
+### Added
 - Initial release of Capacitor Biometric Auth plugin
 - Web implementation using Web Authentication API (WebAuthn)
 - Android native implementation using BiometricPrompt API
