@@ -51,6 +51,20 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.UUID;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.RSAKeyGenParameterSpec;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import android.security.keystore.KeyInfo;
+import java.security.KeyFactory;
+import android.os.Build;
+import androidx.annotation.RequiresApi;
+
 @CapacitorPlugin(name = "BiometricAuth")
 public class BiometricAuthPlugin extends Plugin {
     
@@ -72,6 +86,10 @@ public class BiometricAuthPlugin extends Plugin {
     private boolean allowDeviceCredential = true;
     private int maxAttempts = 3;
     private int lockoutDuration = 30;
+    
+    // Crypto constants
+    private static final String KEY_PAIR_ALIAS_PREFIX = "BiometricAuthKeyPair_";
+    private static final String SECRET_KEY_ALIAS_PREFIX = "BiometricAuthSecret_";
     
     private KeyStore keyStore;
     private BiometricPrompt biometricPrompt;
@@ -365,6 +383,83 @@ public class BiometricAuthPlugin extends Plugin {
         keyGenerator.generateKey();
     }
     
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private KeyPair generateKeyPair(String alias, JSObject androidOptions) throws Exception {
+        String algorithm = androidOptions.getString("signatureAlgorithm", "SHA256withECDSA");
+        int keySize = androidOptions.getInt("keySize", 256);
+        int authValidityDuration = androidOptions.getInt("authenticationValidityDuration", -1);
+        boolean invalidateOnEnrollment = androidOptions.getBoolean("invalidateOnEnrollment", true);
+        boolean requireStrongBiometric = androidOptions.getBoolean("requireStrongBiometric", false);
+        
+        KeyPairGenerator keyPairGenerator;
+        KeyGenParameterSpec.Builder specBuilder;
+        
+        if (algorithm.contains("RSA")) {
+            keyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, ANDROID_KEYSTORE);
+            specBuilder = new KeyGenParameterSpec.Builder(alias,
+                    KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
+                    .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+                    .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
+                    .setKeySize(keySize > 0 ? keySize : 2048);
+        } else {
+            keyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, ANDROID_KEYSTORE);
+            specBuilder = new KeyGenParameterSpec.Builder(alias,
+                    KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
+                    .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+                    .setKeySize(keySize > 0 ? keySize : 256);
+        }
+        
+        specBuilder.setUserAuthenticationRequired(true);
+        
+        if (authValidityDuration >= 0) {
+            specBuilder.setUserAuthenticationValidityDurationSeconds(authValidityDuration);
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            specBuilder.setInvalidatedByBiometricEnrollment(invalidateOnEnrollment);
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && requireStrongBiometric) {
+            specBuilder.setUserAuthenticationParameters(0, 
+                KeyProperties.AUTH_BIOMETRIC_STRONG);
+        }
+        
+        keyPairGenerator.initialize(specBuilder.build());
+        return keyPairGenerator.generateKeyPair();
+    }
+    
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private SecretKey generateSecretKeyForCrypto(String alias, JSObject androidOptions) throws Exception {
+        int authValidityDuration = androidOptions.getInt("authenticationValidityDuration", -1);
+        boolean invalidateOnEnrollment = androidOptions.getBoolean("invalidateOnEnrollment", true);
+        boolean requireStrongBiometric = androidOptions.getBoolean("requireStrongBiometric", false);
+        
+        KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE);
+        
+        KeyGenParameterSpec.Builder specBuilder = new KeyGenParameterSpec.Builder(alias,
+                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setUserAuthenticationRequired(true)
+                .setKeySize(256);
+        
+        if (authValidityDuration >= 0) {
+            specBuilder.setUserAuthenticationValidityDurationSeconds(authValidityDuration);
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            specBuilder.setInvalidatedByBiometricEnrollment(invalidateOnEnrollment);
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && requireStrongBiometric) {
+            specBuilder.setUserAuthenticationParameters(0, 
+                KeyProperties.AUTH_BIOMETRIC_STRONG);
+        }
+        
+        keyGenerator.init(specBuilder.build());
+        return keyGenerator.generateKey();
+    }
+    
     private String encryptData(String data) throws Exception {
         SecretKey secretKey = (SecretKey) keyStore.getKey(KEY_ALIAS, null);
         Cipher cipher = Cipher.getInstance(TRANSFORMATION);
@@ -397,5 +492,87 @@ public class BiometricAuthPlugin extends Plugin {
         
         byte[] decrypted = cipher.doFinal(encrypted);
         return new String(decrypted, StandardCharsets.UTF_8);
+    }
+    
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private BiometricPrompt.CryptoObject createCryptoObject(String cryptoType, String challenge, 
+            JSObject androidOptions) throws Exception {
+        String keyAlias = androidOptions.getString("keyAlias", KEY_PAIR_ALIAS_PREFIX + "default");
+        
+        switch (cryptoType) {
+            case "signature":
+                return createSignatureCryptoObject(keyAlias, androidOptions);
+            case "cipher":
+                return createCipherCryptoObject(keyAlias, androidOptions);
+            case "mac":
+                return createMacCryptoObject(keyAlias, challenge, androidOptions);
+            default:
+                throw new IllegalArgumentException("Unsupported crypto type: " + cryptoType);
+        }
+    }
+    
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private BiometricPrompt.CryptoObject createSignatureCryptoObject(String keyAlias, 
+            JSObject androidOptions) throws Exception {
+        // Generate or retrieve key pair
+        KeyPair keyPair;
+        if (!keyStore.containsAlias(keyAlias)) {
+            keyPair = generateKeyPair(keyAlias, androidOptions);
+        } else {
+            PrivateKey privateKey = (PrivateKey) keyStore.getKey(keyAlias, null);
+            PublicKey publicKey = keyStore.getCertificate(keyAlias).getPublicKey();
+            keyPair = new KeyPair(publicKey, privateKey);
+        }
+        
+        // Create signature object
+        String algorithm = androidOptions.getString("signatureAlgorithm", "SHA256withECDSA");
+        Signature signature = Signature.getInstance(algorithm);
+        signature.initSign(keyPair.getPrivate());
+        
+        return new BiometricPrompt.CryptoObject(signature);
+    }
+    
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private BiometricPrompt.CryptoObject createCipherCryptoObject(String keyAlias, 
+            JSObject androidOptions) throws Exception {
+        // Generate or retrieve secret key
+        SecretKey secretKey;
+        if (!keyStore.containsAlias(keyAlias)) {
+            secretKey = generateSecretKeyForCrypto(keyAlias, androidOptions);
+        } else {
+            secretKey = (SecretKey) keyStore.getKey(keyAlias, null);
+        }
+        
+        // Create cipher object
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        
+        return new BiometricPrompt.CryptoObject(cipher);
+    }
+    
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private BiometricPrompt.CryptoObject createMacCryptoObject(String keyAlias, String challenge,
+            JSObject androidOptions) throws Exception {
+        // Generate or retrieve secret key
+        SecretKey secretKey;
+        if (!keyStore.containsAlias(keyAlias)) {
+            secretKey = generateSecretKeyForCrypto(keyAlias, androidOptions);
+        } else {
+            secretKey = (SecretKey) keyStore.getKey(keyAlias, null);
+        }
+        
+        // Create MAC object
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(secretKey);
+        
+        return new BiometricPrompt.CryptoObject(mac);
+    }
+    
+    private String getPublicKeyBase64(String keyAlias) throws Exception {
+        if (keyStore.containsAlias(keyAlias)) {
+            PublicKey publicKey = keyStore.getCertificate(keyAlias).getPublicKey();
+            return Base64.encodeToString(publicKey.getEncoded(), Base64.NO_WRAP);
+        }
+        return null;
     }
 }

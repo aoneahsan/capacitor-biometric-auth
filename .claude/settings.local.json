@@ -99,7 +99,8 @@
       "Bash(npx cap:*)",
       "Bash(pod install:*)",
       "Bash(yarn preview)",
-      "WebFetch(domain:developer.mozilla.org)"
+      "WebFetch(domain:developer.mozilla.org)",
+      "WebFetch(domain:developer.android.com)"
     ],
     "deny": []
   }

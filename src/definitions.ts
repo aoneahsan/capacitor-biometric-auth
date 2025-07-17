@@ -92,6 +92,10 @@ export interface BiometricAuthOptions {
    * WebAuthn specific options for web platform
    */
   webAuthnOptions?: WebAuthnOptions;
+  /**
+   * Android specific options for biometric authentication
+   */
+  androidOptions?: AndroidBiometricOptions;
 }
 
 export interface WebAuthnOptions {
@@ -206,6 +210,41 @@ export interface WebAuthnGetOptions {
   hints?: Array<'security-key' | 'client-device' | 'hybrid'>;
 }
 
+export interface AndroidBiometricOptions {
+  /**
+   * Challenge for cryptographic operations (string or base64 encoded)
+   */
+  challenge?: string | ArrayBuffer;
+  /**
+   * Type of cryptographic operation to perform
+   */
+  cryptoType?: 'signature' | 'cipher' | 'mac';
+  /**
+   * Key validity duration in seconds (-1 for auth required every time)
+   */
+  authenticationValidityDuration?: number;
+  /**
+   * Whether the key should be invalidated on new biometric enrollment
+   */
+  invalidateOnEnrollment?: boolean;
+  /**
+   * Require strong biometric (Class 3)
+   */
+  requireStrongBiometric?: boolean;
+  /**
+   * Key alias to use for cryptographic operations
+   */
+  keyAlias?: string;
+  /**
+   * Algorithm to use for signature operations
+   */
+  signatureAlgorithm?: 'SHA256withRSA' | 'SHA256withECDSA' | 'SHA512withRSA' | 'SHA512withECDSA';
+  /**
+   * Key size for key generation
+   */
+  keySize?: number;
+}
+
 export interface BiometricAuthResult {
   /**
    * Whether the authentication was successful
@@ -223,6 +262,41 @@ export interface BiometricAuthResult {
    * Error that occurred during authentication
    */
   error?: BiometricAuthError;
+  /**
+   * Android-specific cryptographic results
+   */
+  androidCryptoResult?: AndroidCryptoResult;
+}
+
+export interface AndroidCryptoResult {
+  /**
+   * Signed challenge (base64 encoded) for signature operations
+   */
+  signedChallenge?: string;
+  /**
+   * Encrypted data (base64 encoded) for cipher operations
+   */
+  encryptedData?: string;
+  /**
+   * Initialization vector (base64 encoded) for cipher operations
+   */
+  iv?: string;
+  /**
+   * Public key (base64 encoded) for signature verification
+   */
+  publicKey?: string;
+  /**
+   * MAC result (base64 encoded) for MAC operations
+   */
+  macResult?: string;
+  /**
+   * The type of cryptographic operation performed
+   */
+  operationType: 'signature' | 'cipher' | 'mac';
+  /**
+   * Algorithm used for the operation
+   */
+  algorithm?: string;
 }
 
 export interface BiometricAuthConfig {
