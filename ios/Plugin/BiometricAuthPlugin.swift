@@ -251,7 +251,7 @@ public class BiometricAuthPlugin: CAPPlugin {
                         "id": credentialId,
                         "rawId": self.base64UrlEncode(credentialId.data(using: .utf8) ?? Data()),
                         "response": [
-                            "attestationObject": self.base64UrlEncode("mobile_attestation".data(using: .utf8) ?? Data()),
+                            "attestationObject": ("mobile_attestation".data(using: .utf8) ?? Data()).base64EncodedString(),
                             "clientDataJSON": self.base64UrlEncode(self.createClientDataJSON(type: "webauthn.create", 
                                 challenge: "mobile_registration_\(Int(Date().timeIntervalSince1970 * 1000))").data(using: .utf8) ?? Data()),
                             "transports": ["internal"]

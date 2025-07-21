@@ -420,7 +420,7 @@ public class BiometricAuthPlugin extends Plugin {
                 credentialData.put("rawId", base64UrlEncode(credentialId.getBytes(StandardCharsets.UTF_8)));
                 
                 JSObject response = new JSObject();
-                response.put("attestationObject", base64UrlEncode("mobile_attestation".getBytes(StandardCharsets.UTF_8)));
+                response.put("attestationObject", Base64.encodeToString("mobile_attestation".getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP));
                 response.put("clientDataJSON", base64UrlEncode(createClientDataJSON("webauthn.create", 
                     "mobile_registration_" + System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8)));
                 
