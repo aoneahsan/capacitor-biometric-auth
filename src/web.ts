@@ -29,6 +29,19 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
   private sessions: Map<string, { token: string; expiresAt: number }> =
     new Map();
 
+  // Helper function for base64url encoding
+  private arrayBufferToBase64URL(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  }
+
   async isAvailable(): Promise<BiometricAvailabilityResult> {
     // Check if Web Authentication API is available
     if (!window.PublicKeyCredential) {
@@ -152,17 +165,19 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
         // Create enhanced token with credential data for backend verification
         const credentialData = {
           id: credential.id,
-          rawId: arrayBufferToBase64(credential.rawId),
+          rawId: this.arrayBufferToBase64URL(credential.rawId),
           response: {
-            authenticatorData: arrayBufferToBase64(
+            authenticatorData: this.arrayBufferToBase64URL(
               credential.response.authenticatorData
             ),
-            clientDataJSON: arrayBufferToBase64(
+            clientDataJSON: this.arrayBufferToBase64URL(
               credential.response.clientDataJSON
             ),
-            signature: arrayBufferToBase64(credential.response.signature),
+            signature: this.arrayBufferToBase64URL(
+              credential.response.signature
+            ),
             userHandle: credential.response.userHandle
-              ? arrayBufferToBase64(credential.response.userHandle)
+              ? this.arrayBufferToBase64URL(credential.response.userHandle)
               : undefined,
           },
           type: credential.type,
@@ -393,12 +408,12 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
         // Create enhanced token with credential data for backend verification
         const credentialData = {
           id: credential.id,
-          rawId: arrayBufferToBase64(credential.rawId),
+          rawId: this.arrayBufferToBase64URL(credential.rawId),
           response: {
-            attestationObject: arrayBufferToBase64(
+            attestationObject: this.arrayBufferToBase64URL(
               credential.response.attestationObject
             ),
-            clientDataJSON: arrayBufferToBase64(
+            clientDataJSON: this.arrayBufferToBase64URL(
               credential.response.clientDataJSON
             ),
             transports: credential.response.getTransports?.() || [],

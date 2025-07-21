@@ -1,7 +1,4 @@
-import {
-  WebAuthnCreateOptions,
-  WebAuthnGetOptions,
-} from '../definitions';
+import { WebAuthnCreateOptions, WebAuthnGetOptions } from '../definitions';
 
 /**
  * Convert various input formats to ArrayBuffer for WebAuthn API
@@ -10,30 +7,48 @@ export function toArrayBuffer(
   data: ArrayBuffer | Uint8Array | string | undefined
 ): ArrayBuffer | undefined {
   if (!data) return undefined;
-  
+
   if (data instanceof ArrayBuffer) {
     return data;
   }
-  
+
   if (data instanceof Uint8Array) {
-    return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    return data.buffer.slice(
+      data.byteOffset,
+      data.byteOffset + data.byteLength
+    );
   }
-  
+
   if (typeof data === 'string') {
-    // Assume base64 encoded string
     try {
-      const binaryString = atob(data);
+      // First try base64url decoding (WebAuthn standard)
+      const base64 = data
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(data.length + ((4 - (data.length % 4)) % 4), '=');
+
+      const binaryString = atob(base64);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
       return bytes.buffer;
     } catch (e) {
-      // If not base64, encode as UTF-8
-      return new TextEncoder().encode(data).buffer;
+      try {
+        // Fallback to regular base64 decoding
+        const binaryString = atob(data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+      } catch (e2) {
+        // If both fail, encode as UTF-8
+        return new TextEncoder().encode(data).buffer;
+      }
     }
   }
-  
+
   return undefined;
 }
 
@@ -47,6 +62,18 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+/**
+ * Convert ArrayBuffer to base64url string (WebAuthn standard)
+ */
+export function arrayBufferToBase64URL(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
@@ -65,36 +92,40 @@ export function mergeCreateOptions(
   userOptions?: WebAuthnCreateOptions,
   defaults?: Partial<PublicKeyCredentialCreationOptions>
 ): PublicKeyCredentialCreationOptions {
-  const challenge = toArrayBuffer(userOptions?.challenge) || generateChallenge();
-  
+  const challenge =
+    toArrayBuffer(userOptions?.challenge) || generateChallenge();
+
   const options: PublicKeyCredentialCreationOptions = {
     challenge,
     rp: {
-      name: userOptions?.rp?.name || defaults?.rp?.name || window.location.hostname,
+      name:
+        userOptions?.rp?.name || defaults?.rp?.name || window.location.hostname,
       id: userOptions?.rp?.id || defaults?.rp?.id || window.location.hostname,
     },
     user: {
-      id: toArrayBuffer(userOptions?.user?.id) || 
-          (defaults?.user?.id instanceof ArrayBuffer || 
-           defaults?.user?.id instanceof Uint8Array ? 
-           toArrayBuffer(defaults.user.id) : undefined) || 
-          crypto.getRandomValues(new Uint8Array(16)).buffer,
-      name: userOptions?.user?.name || 
-            defaults?.user?.name || 
-            `user@${window.location.hostname}`,
-      displayName: userOptions?.user?.displayName || 
-                   defaults?.user?.displayName || 
-                   'User',
+      id:
+        toArrayBuffer(userOptions?.user?.id) ||
+        (defaults?.user?.id instanceof ArrayBuffer ||
+        defaults?.user?.id instanceof Uint8Array
+          ? toArrayBuffer(defaults.user.id)
+          : undefined) ||
+        crypto.getRandomValues(new Uint8Array(16)).buffer,
+      name:
+        userOptions?.user?.name ||
+        defaults?.user?.name ||
+        `user@${window.location.hostname}`,
+      displayName:
+        userOptions?.user?.displayName || defaults?.user?.displayName || 'User',
     },
-    pubKeyCredParams: userOptions?.pubKeyCredParams || 
-                      defaults?.pubKeyCredParams || [
-                        { alg: -7, type: 'public-key' },  // ES256
-                        { alg: -257, type: 'public-key' }, // RS256
-                      ],
+    pubKeyCredParams: userOptions?.pubKeyCredParams ||
+      defaults?.pubKeyCredParams || [
+        { alg: -7, type: 'public-key' }, // ES256
+        { alg: -257, type: 'public-key' }, // RS256
+      ],
     timeout: userOptions?.timeout || defaults?.timeout || 60000,
     attestation: userOptions?.attestation || defaults?.attestation || 'none',
   };
-  
+
   // Add optional properties if provided
   if (userOptions?.authenticatorSelection || defaults?.authenticatorSelection) {
     options.authenticatorSelection = {
@@ -102,26 +133,26 @@ export function mergeCreateOptions(
       ...userOptions?.authenticatorSelection,
     };
   }
-  
+
   if (userOptions?.attestationFormats) {
     (options as any).attestationFormats = userOptions.attestationFormats;
   }
-  
+
   if (userOptions?.excludeCredentials) {
-    options.excludeCredentials = userOptions.excludeCredentials.map(cred => ({
+    options.excludeCredentials = userOptions.excludeCredentials.map((cred) => ({
       ...cred,
       id: toArrayBuffer(cred.id)!,
     }));
   }
-  
+
   if (userOptions?.extensions) {
     options.extensions = userOptions.extensions;
   }
-  
+
   if (userOptions?.hints) {
     (options as any).hints = userOptions.hints;
   }
-  
+
   return options;
 }
 
@@ -132,43 +163,45 @@ export function mergeGetOptions(
   userOptions?: WebAuthnGetOptions,
   defaults?: Partial<PublicKeyCredentialRequestOptions>
 ): PublicKeyCredentialRequestOptions {
-  const challenge = toArrayBuffer(userOptions?.challenge) || generateChallenge();
-  
+  const challenge =
+    toArrayBuffer(userOptions?.challenge) || generateChallenge();
+
   const options: PublicKeyCredentialRequestOptions = {
     challenge,
     timeout: userOptions?.timeout || defaults?.timeout || 60000,
   };
-  
+
   // Add optional properties if provided
   if (userOptions?.rpId || defaults?.rpId) {
     options.rpId = userOptions?.rpId || defaults?.rpId;
   }
-  
+
   if (userOptions?.allowCredentials || defaults?.allowCredentials) {
     const userCreds = userOptions?.allowCredentials || [];
     const defaultCreds = defaults?.allowCredentials || [];
-    options.allowCredentials = [...userCreds, ...defaultCreds].map(cred => ({
+    options.allowCredentials = [...userCreds, ...defaultCreds].map((cred) => ({
       type: 'public-key' as PublicKeyCredentialType,
       id: toArrayBuffer(cred.id as string | ArrayBuffer | Uint8Array)!,
       transports: cred.transports,
     })) as PublicKeyCredentialDescriptor[];
   }
-  
+
   if (userOptions?.userVerification || defaults?.userVerification) {
-    options.userVerification = userOptions?.userVerification || defaults?.userVerification;
+    options.userVerification =
+      userOptions?.userVerification || defaults?.userVerification;
   }
-  
+
   if (userOptions?.extensions || defaults?.extensions) {
     options.extensions = {
       ...defaults?.extensions,
       ...userOptions?.extensions,
     };
   }
-  
+
   if (userOptions?.hints) {
     (options as any).hints = userOptions.hints;
   }
-  
+
   return options;
 }
 
@@ -176,7 +209,9 @@ export function mergeGetOptions(
  * Store credential ID in localStorage for future authentication
  */
 export function storeCredentialId(credentialId: string, userId?: string): void {
-  const key = userId ? `biometric_auth_cred_${userId}` : 'biometric_auth_cred_default';
+  const key = userId
+    ? `biometric_auth_cred_${userId}`
+    : 'biometric_auth_cred_default';
   const existingCreds = getStoredCredentialIds(userId);
   if (!existingCreds.includes(credentialId)) {
     existingCreds.push(credentialId);
@@ -188,7 +223,9 @@ export function storeCredentialId(credentialId: string, userId?: string): void {
  * Get stored credential IDs from localStorage
  */
 export function getStoredCredentialIds(userId?: string): string[] {
-  const key = userId ? `biometric_auth_cred_${userId}` : 'biometric_auth_cred_default';
+  const key = userId
+    ? `biometric_auth_cred_${userId}`
+    : 'biometric_auth_cred_default';
   try {
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : [];
@@ -205,9 +242,9 @@ export function clearStoredCredentialIds(userId?: string): void {
     localStorage.removeItem(`biometric_auth_cred_${userId}`);
   } else {
     // Clear all credential keys
-    const keys = Object.keys(localStorage).filter(key => 
+    const keys = Object.keys(localStorage).filter((key) =>
       key.startsWith('biometric_auth_cred_')
     );
-    keys.forEach(key => localStorage.removeItem(key));
+    keys.forEach((key) => localStorage.removeItem(key));
   }
 }
