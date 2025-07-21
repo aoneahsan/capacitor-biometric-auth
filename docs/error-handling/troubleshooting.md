@@ -13,11 +13,13 @@ This guide helps you diagnose and resolve common issues with the `capacitor-biom
 **Solutions**:
 
 1. **Sync the project**:
+
 ```bash
 npx cap sync
 ```
 
 2. **Clean and rebuild**:
+
 ```bash
 # iOS
 cd ios && pod install --repo-update
@@ -28,9 +30,10 @@ cd android && ./gradlew clean
 ```
 
 3. **Verify installation**:
+
 ```typescript
 // Check if plugin is registered
-console.log('Plugins:', Capacitor.Plugins);
+consoleLog('Plugins:', Capacitor.Plugins);
 ```
 
 #### Build Errors
@@ -74,34 +77,36 @@ end
 **Problem**: `isAvailable()` returns false unexpectedly.
 
 **Diagnostic code**:
+
 ```typescript
 async function diagnoseBiometric() {
   const { isAvailable, reason } = await BiometricAuth.isAvailable();
-  
-  console.log('Available:', isAvailable);
-  console.log('Reason:', reason);
-  
+
+  consoleLog('Available:', isAvailable);
+  consoleLog('Reason:', reason);
+
   if (!isAvailable) {
     switch (reason) {
       case 'NO_HARDWARE':
-        console.log('Device has no biometric hardware');
+        consoleLog('Device has no biometric hardware');
         break;
-        
+
       case 'NO_ENROLLED_BIOMETRICS':
-        console.log('User needs to enroll biometrics');
+        consoleLog('User needs to enroll biometrics');
         // Guide to settings
         break;
-        
+
       case 'BIOMETRIC_UNAVAILABLE':
-        console.log('Temporarily unavailable (lockout?)');
+        consoleLog('Temporarily unavailable (lockout?)');
         break;
     }
   }
-  
+
   // Check supported types
   try {
-    const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
-    console.log('Supported:', supportedBiometrics);
+    const { supportedBiometrics } =
+      await BiometricAuth.getSupportedBiometrics();
+    consoleLog('Supported:', supportedBiometrics);
   } catch (e) {
     console.error('Error getting supported biometrics:', e);
   }
@@ -113,11 +118,13 @@ async function diagnoseBiometric() {
 **Common causes and solutions**:
 
 1. **Simulator/Emulator issue**:
+
 ```typescript
 // Check if running on real device
-const isSimulator = Capacitor.getPlatform() === 'ios' 
-  ? !window.DeviceOrientationEvent
-  : navigator.userAgent.includes('sdk_gphone');
+const isSimulator =
+  Capacitor.getPlatform() === 'ios'
+    ? !window.DeviceOrientationEvent
+    : navigator.userAgent.includes('sdk_gphone');
 
 if (isSimulator) {
   console.warn('Biometrics may not work properly on simulator');
@@ -125,16 +132,18 @@ if (isSimulator) {
 ```
 
 2. **Configuration issue**:
+
 ```typescript
 // Reset configuration
 await BiometricAuth.configure({
   sessionDuration: 1800000,
   allowDeviceCredential: true,
-  enableLogging: true // Enable for debugging
+  enableLogging: true, // Enable for debugging
 });
 ```
 
 3. **Credential corruption**:
+
 ```typescript
 // Clear and retry
 await BiometricAuth.deleteCredentials();
@@ -146,6 +155,7 @@ await BiometricAuth.deleteCredentials();
 #### Android Issues
 
 **1. Dialog not showing**:
+
 ```typescript
 // Ensure activity is in foreground
 document.addEventListener('resume', async () => {
@@ -157,6 +167,7 @@ document.addEventListener('resume', async () => {
 ```
 
 **2. Keystore errors**:
+
 ```typescript
 // Handle keystore issues
 try {
@@ -167,14 +178,15 @@ try {
     await BiometricAuth.deleteCredentials();
     await BiometricAuth.configure({
       androidConfig: {
-        keystoreAlias: 'NewBiometricKey'
-      }
+        keystoreAlias: 'NewBiometricKey',
+      },
     });
   }
 }
 ```
 
 **3. Hardware detection issues**:
+
 ```java
 // Check BiometricManager directly (native code)
 BiometricManager biometricManager = BiometricManager.from(context);
@@ -186,22 +198,24 @@ int canAuthenticate = biometricManager.canAuthenticate(
 #### iOS Issues
 
 **1. Face ID not working**:
+
 ```typescript
 // Check Face ID permission
 async function checkFaceIDPermission() {
   // Ensure Info.plist has NSFaceIDUsageDescription
   const { isAvailable } = await BiometricAuth.isAvailable();
-  
+
   if (!isAvailable) {
     // May need to prompt for Face ID permission
     await BiometricAuth.authenticate({
-      reason: 'Enable Face ID for quick access'
+      reason: 'Enable Face ID for quick access',
     });
   }
 }
 ```
 
 **2. Keychain access errors**:
+
 ```typescript
 // Error -25300: Item not found
 // Solution: Clear and recreate
@@ -212,6 +226,7 @@ await BiometricAuth.deleteCredentials();
 ```
 
 **3. Context invalidation**:
+
 ```typescript
 // Avoid multiple simultaneous calls
 let isAuthenticating = false;
@@ -221,7 +236,7 @@ async function safeAuthenticate() {
     console.warn('Authentication already in progress');
     return;
   }
-  
+
   isAuthenticating = true;
   try {
     await BiometricAuth.authenticate();
@@ -234,22 +249,23 @@ async function safeAuthenticate() {
 #### Web Issues
 
 **1. WebAuthn not available**:
+
 ```typescript
 // Comprehensive WebAuthn check
 async function checkWebAuthnSupport() {
   const checks = {
     publicKeyCredential: 'PublicKeyCredential' in window,
     secureContext: window.isSecureContext,
-    platformAuthenticator: false
+    platformAuthenticator: false,
   };
-  
+
   if (checks.publicKeyCredential) {
-    checks.platformAuthenticator = await PublicKeyCredential
-      .isUserVerifyingPlatformAuthenticatorAvailable();
+    checks.platformAuthenticator =
+      await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
   }
-  
+
   console.table(checks);
-  
+
   if (!checks.secureContext) {
     console.error('HTTPS required for WebAuthn');
   }
@@ -257,6 +273,7 @@ async function checkWebAuthnSupport() {
 ```
 
 **2. Registration failures**:
+
 ```typescript
 // Clear existing credentials and retry
 localStorage.removeItem('biometric_credentials');
@@ -265,8 +282,8 @@ localStorage.removeItem('biometric_credentials');
 await BiometricAuth.configure({
   webConfig: {
     rpId: window.location.hostname, // Must match exactly
-    rpName: 'My App'
-  }
+    rpName: 'My App',
+  },
 });
 ```
 
@@ -277,7 +294,7 @@ await BiometricAuth.configure({
 ```typescript
 // Enable all logging
 await BiometricAuth.configure({
-  enableLogging: true
+  enableLogging: true,
 });
 
 // Platform-specific logging
@@ -296,49 +313,49 @@ if (Capacitor.getPlatform() === 'android') {
 class BiometricDebugger {
   async runDiagnostics() {
     console.group('🔍 Biometric Diagnostics');
-    
+
     // 1. Platform info
-    console.log('Platform:', Capacitor.getPlatform());
-    console.log('Native app?', Capacitor.isNativePlatform());
-    
+    consoleLog('Platform:', Capacitor.getPlatform());
+    consoleLog('Native app?', Capacitor.isNativePlatform());
+
     // 2. Availability check
     try {
       const availability = await BiometricAuth.isAvailable();
-      console.log('Available:', availability);
+      consoleLog('Available:', availability);
     } catch (e) {
       console.error('Availability check failed:', e);
     }
-    
+
     // 3. Supported biometrics
     try {
       const supported = await BiometricAuth.getSupportedBiometrics();
-      console.log('Supported types:', supported);
+      consoleLog('Supported types:', supported);
     } catch (e) {
       console.error('Supported check failed:', e);
     }
-    
+
     // 4. Configuration test
     try {
       await BiometricAuth.configure({
         enableLogging: true,
         sessionDuration: 60000
       });
-      console.log('Configuration: Success');
+      consoleLog('Configuration: Success');
     } catch (e) {
       console.error('Configuration failed:', e);
     }
-    
+
     // 5. Storage check
     this.checkStorage();
-    
+
     console.groupEnd();
   }
-  
+
   private checkStorage() {
     if (Capacitor.getPlatform() === 'web') {
       const keys = Object.keys(localStorage)
         .filter(k => k.includes('biometric'));
-      console.log('Storage keys:', keys);
+      consoleLog('Storage keys:', keys);
     }
   }
 }
@@ -353,14 +370,14 @@ await debugger.runDiagnostics();
 ```typescript
 // Monitor WebAuthn API calls
 const originalCreate = navigator.credentials.create;
-navigator.credentials.create = function(...args) {
-  console.log('WebAuthn create:', args);
+navigator.credentials.create = function (...args) {
+  consoleLog('WebAuthn create:', args);
   return originalCreate.apply(this, args);
 };
 
 const originalGet = navigator.credentials.get;
-navigator.credentials.get = function(...args) {
-  console.log('WebAuthn get:', args);
+navigator.credentials.get = function (...args) {
+  consoleLog('WebAuthn get:', args);
   return originalGet.apply(this, args);
 };
 ```
@@ -383,24 +400,24 @@ async function initBiometric() {
 // 2. Reduce timeout for web
 await BiometricAuth.configure({
   webConfig: {
-    timeout: 30000 // 30 seconds instead of 60
-  }
+    timeout: 30000, // 30 seconds instead of 60
+  },
 });
 
 // 3. Cache session state
 class BiometricSession {
   private lastAuth: number = 0;
   private sessionDuration = 300000; // 5 minutes
-  
+
   needsAuth(): boolean {
     return Date.now() - this.lastAuth > this.sessionDuration;
   }
-  
+
   async authenticate() {
     if (!this.needsAuth()) {
       return true; // Skip if recent
     }
-    
+
     const result = await BiometricAuth.authenticate();
     if (result.isAuthenticated) {
       this.lastAuth = Date.now();
@@ -418,19 +435,19 @@ class BiometricSession {
 // Clean up on component unmount
 class BiometricComponent {
   private cleanup: (() => void)[] = [];
-  
+
   async init() {
     // Store cleanup functions
     const resumeListener = App.addListener('appStateChange', () => {
       // Handle state change
     });
-    
+
     this.cleanup.push(() => resumeListener.remove());
   }
-  
+
   destroy() {
     // Clean up all listeners
-    this.cleanup.forEach(fn => fn());
+    this.cleanup.forEach((fn) => fn());
     this.cleanup = [];
   }
 }
@@ -446,37 +463,37 @@ class BiometricMigration {
   async migrateFromOldPlugin() {
     // 1. Check for old data
     const oldData = this.getOldPluginData();
-    
+
     if (oldData) {
       // 2. Clear old plugin data
       this.clearOldPlugin();
-      
+
       // 3. Re-enroll with new plugin
-      console.log('Please re-authenticate to complete migration');
-      
+      consoleLog('Please re-authenticate to complete migration');
+
       const result = await BiometricAuth.authenticate({
-        reason: 'Re-authenticate to complete setup'
+        reason: 'Re-authenticate to complete setup',
       });
-      
+
       if (result.isAuthenticated) {
-        console.log('Migration completed successfully');
+        consoleLog('Migration completed successfully');
       }
     }
   }
-  
+
   private getOldPluginData() {
     // Check for old plugin's storage keys
     return localStorage.getItem('old_biometric_plugin_data');
   }
-  
+
   private clearOldPlugin() {
     // Remove old plugin data
     const keysToRemove = [
       'old_biometric_plugin_data',
-      'old_biometric_credentials'
+      'old_biometric_credentials',
     ];
-    
-    keysToRemove.forEach(key => {
+
+    keysToRemove.forEach((key) => {
       localStorage.removeItem(key);
     });
   }
@@ -490,39 +507,40 @@ class BiometricMigration {
 ```typescript
 async function emergencyReset() {
   console.warn('Performing emergency reset...');
-  
+
   try {
     // 1. Delete all credentials
     await BiometricAuth.deleteCredentials();
-    console.log('✓ Credentials deleted');
+    consoleLog('✓ Credentials deleted');
   } catch (e) {
     console.error('Failed to delete credentials:', e);
   }
-  
+
   // 2. Clear web storage (if web platform)
   if (Capacitor.getPlatform() === 'web') {
-    const keysToRemove = Object.keys(localStorage)
-      .filter(k => k.includes('biometric'));
-    
-    keysToRemove.forEach(key => {
+    const keysToRemove = Object.keys(localStorage).filter((k) =>
+      k.includes('biometric')
+    );
+
+    keysToRemove.forEach((key) => {
       localStorage.removeItem(key);
     });
-    console.log('✓ Web storage cleared');
+    consoleLog('✓ Web storage cleared');
   }
-  
+
   // 3. Reset configuration
   try {
     await BiometricAuth.configure({
       sessionDuration: 1800000,
       enableLogging: false,
-      allowDeviceCredential: true
+      allowDeviceCredential: true,
     });
-    console.log('✓ Configuration reset');
+    consoleLog('✓ Configuration reset');
   } catch (e) {
     console.error('Failed to reset config:', e);
   }
-  
-  console.log('Emergency reset completed');
+
+  consoleLog('Emergency reset completed');
 }
 ```
 
@@ -539,24 +557,26 @@ async function collectDiagnosticInfo() {
     capacitor_version: Capacitor.VERSION,
     platform: Capacitor.getPlatform(),
     platform_version: Capacitor.getPlatformVersion?.() || 'unknown',
-    
+
     // Availability info
-    availability: await BiometricAuth.isAvailable()
-      .catch(e => ({ error: e.message })),
-    
+    availability: await BiometricAuth.isAvailable().catch((e) => ({
+      error: e.message,
+    })),
+
     // Supported biometrics
-    supported: await BiometricAuth.getSupportedBiometrics()
-      .catch(e => ({ error: e.message })),
-    
+    supported: await BiometricAuth.getSupportedBiometrics().catch((e) => ({
+      error: e.message,
+    })),
+
     // Device info
     device: {
       model: (await Device.getInfo()).model,
       osVersion: (await Device.getInfo()).osVersion,
-      platform: (await Device.getInfo()).platform
-    }
+      platform: (await Device.getInfo()).platform,
+    },
   };
-  
-  console.log('Diagnostic Info:', JSON.stringify(info, null, 2));
+
+  consoleLog('Diagnostic Info:', JSON.stringify(info, null, 2));
   return info;
 }
 ```

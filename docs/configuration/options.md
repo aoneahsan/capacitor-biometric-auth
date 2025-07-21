@@ -11,11 +11,17 @@ await BiometricAuth.configure({
   // General options
   sessionDuration: 1800000,
   enableLogging: true,
-  
+
   // Platform-specific options
-  androidConfig: { /* ... */ },
-  iosConfig: { /* ... */ },
-  webConfig: { /* ... */ }
+  androidConfig: {
+    /* ... */
+  },
+  iosConfig: {
+    /* ... */
+  },
+  webConfig: {
+    /* ... */
+  },
 });
 ```
 
@@ -31,11 +37,12 @@ Duration in milliseconds for session validity.
 
 ```typescript
 await BiometricAuth.configure({
-  sessionDuration: 3600000 // 1 hour
+  sessionDuration: 3600000, // 1 hour
 });
 ```
 
 **Use Cases**:
+
 - Banking apps: 5-10 minutes
 - Social apps: 30-60 minutes
 - Utility apps: 24 hours
@@ -49,11 +56,12 @@ Custom key for storing session data.
 
 ```typescript
 await BiometricAuth.configure({
-  sessionKey: 'myapp_biometric_session'
+  sessionKey: 'myapp_biometric_session',
 });
 ```
 
 **Use Cases**:
+
 - Multiple authentication contexts
 - App with different user types
 - Avoiding conflicts with other plugins
@@ -67,11 +75,12 @@ Custom encryption key for credential storage.
 
 ```typescript
 await BiometricAuth.configure({
-  encryptionKey: generateSecureKey() // Your secure key
+  encryptionKey: generateSecureKey(), // Your secure key
 });
 ```
 
 **Security Note**: If provided, ensure the key is:
+
 - At least 32 characters long
 - Cryptographically random
 - Stored securely
@@ -86,11 +95,12 @@ Prefix for all storage keys.
 
 ```typescript
 await BiometricAuth.configure({
-  storagePrefix: 'myapp_bio_'
+  storagePrefix: 'myapp_bio_',
 });
 ```
 
 **Use Cases**:
+
 - Multi-tenant applications
 - Multiple authentication providers
 - Namespace isolation
@@ -104,11 +114,12 @@ Allow fallback to device PIN/pattern/password.
 
 ```typescript
 await BiometricAuth.configure({
-  allowDeviceCredential: false // Biometric only
+  allowDeviceCredential: false, // Biometric only
 });
 ```
 
 **Considerations**:
+
 - `true`: Better accessibility
 - `false`: Stricter security
 
@@ -121,11 +132,12 @@ Require explicit user confirmation after biometric.
 
 ```typescript
 await BiometricAuth.configure({
-  confirmationRequired: true // Extra confirmation step
+  confirmationRequired: true, // Extra confirmation step
 });
 ```
 
 **Use Cases**:
+
 - High-value transactions
 - Irreversible actions
 - Compliance requirements
@@ -139,7 +151,7 @@ Enable debug logging.
 
 ```typescript
 await BiometricAuth.configure({
-  enableLogging: process.env.NODE_ENV === 'development'
+  enableLogging: process.env.NODE_ENV === 'development',
 });
 ```
 
@@ -157,8 +169,8 @@ Alias for Android Keystore entry.
 ```typescript
 await BiometricAuth.configure({
   androidConfig: {
-    keystoreAlias: 'MyAppBiometricKey'
-  }
+    keystoreAlias: 'MyAppBiometricKey',
+  },
 });
 ```
 
@@ -172,8 +184,8 @@ Require user authentication to use the key.
 ```typescript
 await BiometricAuth.configure({
   androidConfig: {
-    userAuthenticationRequired: true
-  }
+    userAuthenticationRequired: true,
+  },
 });
 ```
 
@@ -187,12 +199,13 @@ Invalidate keys when new biometrics are enrolled.
 ```typescript
 await BiometricAuth.configure({
   androidConfig: {
-    invalidatedByBiometricEnrollment: true // Recommended
-  }
+    invalidatedByBiometricEnrollment: true, // Recommended
+  },
 });
 ```
 
 **Security Impact**:
+
 - `true`: Higher security, keys invalidated on changes
 - `false`: Convenience, keys persist through changes
 
@@ -206,8 +219,8 @@ Use hardware security module if available.
 ```typescript
 await BiometricAuth.configure({
   androidConfig: {
-    strongBoxBacked: true // Use HSM when available
-  }
+    strongBoxBacked: true, // Use HSM when available
+  },
 });
 ```
 
@@ -224,11 +237,11 @@ await BiometricAuth.authenticate({
       title: 'Biometric Login',
       subtitle: 'Access your secure account',
       description: 'Touch the fingerprint sensor',
-      negativeButtonText: 'Use Password'
+      negativeButtonText: 'Use Password',
     },
     encryptionRequired: true,
-    confirmationRequired: false
-  }
+    confirmationRequired: false,
+  },
 });
 ```
 
@@ -244,12 +257,13 @@ Keychain access group for sharing.
 ```typescript
 await BiometricAuth.configure({
   iosConfig: {
-    accessGroup: 'group.com.company.apps'
-  }
+    accessGroup: 'group.com.company.apps',
+  },
 });
 ```
 
 **Requirements**:
+
 - Add to entitlements file
 - Use for app extensions
 - Share between related apps
@@ -264,8 +278,8 @@ Duration for Touch ID reuse.
 ```typescript
 await BiometricAuth.configure({
   iosConfig: {
-    touchIDAuthenticationAllowableReuseDuration: 10
-  }
+    touchIDAuthenticationAllowableReuseDuration: 10,
+  },
 });
 ```
 
@@ -279,8 +293,8 @@ Customize authentication dialog:
 await BiometricAuth.authenticate({
   iosOptions: {
     localizedFallbackTitle: 'Enter Passcode',
-    biometryType: 'faceID' // or 'touchID'
-  }
+    biometryType: 'faceID', // or 'touchID'
+  },
 });
 ```
 
@@ -296,8 +310,8 @@ Relying Party identifier (your domain).
 ```typescript
 await BiometricAuth.configure({
   webConfig: {
-    rpId: 'example.com' // Without protocol
-  }
+    rpId: 'example.com', // Without protocol
+  },
 });
 ```
 
@@ -313,8 +327,8 @@ Relying Party display name.
 ```typescript
 await BiometricAuth.configure({
   webConfig: {
-    rpName: 'My Awesome App'
-  }
+    rpName: 'My Awesome App',
+  },
 });
 ```
 
@@ -328,12 +342,13 @@ User verification requirement.
 ```typescript
 await BiometricAuth.configure({
   webConfig: {
-    userVerification: 'required' // Always require biometric
-  }
+    userVerification: 'required', // Always require biometric
+  },
 });
 ```
 
 **Options**:
+
 - `required`: Must use biometric
 - `preferred`: Use if available
 - `discouraged`: Skip if possible
@@ -348,8 +363,8 @@ Authentication timeout in milliseconds.
 ```typescript
 await BiometricAuth.configure({
   webConfig: {
-    timeout: 120000 // 2 minutes
-  }
+    timeout: 120000, // 2 minutes
+  },
 });
 ```
 
@@ -363,12 +378,13 @@ Attestation conveyance preference.
 ```typescript
 await BiometricAuth.configure({
   webConfig: {
-    attestation: 'direct' // For high security
-  }
+    attestation: 'direct', // For high security
+  },
 });
 ```
 
 **Options**:
+
 - `none`: No attestation needed
 - `indirect`: Anonymized attestation
 - `direct`: Full attestation
@@ -381,8 +397,8 @@ Provide additional WebAuthn options:
 await BiometricAuth.authenticate({
   webOptions: {
     challenge: customChallenge,
-    allowCredentials: ['credential-id-1', 'credential-id-2']
-  }
+    allowCredentials: ['credential-id-1', 'credential-id-2'],
+  },
 });
 ```
 
@@ -396,31 +412,31 @@ For banking or healthcare apps:
 await BiometricAuth.configure({
   // Short session
   sessionDuration: 300000, // 5 minutes
-  
+
   // No fallback methods
   allowDeviceCredential: false,
-  
+
   // Require confirmation
   confirmationRequired: true,
-  
+
   // Android security
   androidConfig: {
     invalidatedByBiometricEnrollment: true,
     strongBoxBacked: true,
-    userAuthenticationRequired: true
+    userAuthenticationRequired: true,
   },
-  
+
   // iOS security
   iosConfig: {
-    touchIDAuthenticationAllowableReuseDuration: 0 // No reuse
+    touchIDAuthenticationAllowableReuseDuration: 0, // No reuse
   },
-  
+
   // Web security
   webConfig: {
     userVerification: 'required',
     attestation: 'direct',
-    timeout: 30000 // 30 seconds
-  }
+    timeout: 30000, // 30 seconds
+  },
 });
 ```
 
@@ -432,28 +448,28 @@ For social or utility apps:
 await BiometricAuth.configure({
   // Long session
   sessionDuration: 86400000, // 24 hours
-  
+
   // Allow fallbacks
   allowDeviceCredential: true,
-  
+
   // No extra confirmation
   confirmationRequired: false,
-  
+
   // Android convenience
   androidConfig: {
-    invalidatedByBiometricEnrollment: false
+    invalidatedByBiometricEnrollment: false,
   },
-  
+
   // iOS convenience
   iosConfig: {
-    touchIDAuthenticationAllowableReuseDuration: 60 // 1 minute
+    touchIDAuthenticationAllowableReuseDuration: 60, // 1 minute
   },
-  
+
   // Web convenience
   webConfig: {
     userVerification: 'preferred',
-    timeout: 120000 // 2 minutes
-  }
+    timeout: 120000, // 2 minutes
+  },
 });
 ```
 
@@ -465,15 +481,15 @@ For testing and debugging:
 await BiometricAuth.configure({
   enableLogging: true,
   sessionDuration: 60000, // 1 minute for testing
-  
+
   // Test different scenarios
   allowDeviceCredential: true,
   confirmationRequired: false,
-  
+
   webConfig: {
     userVerification: 'preferred',
-    timeout: 300000 // 5 minutes for debugging
-  }
+    timeout: 300000, // 5 minutes for debugging
+  },
 });
 ```
 
@@ -483,11 +499,11 @@ await BiometricAuth.configure({
 
 Configurations are stored persistently:
 
-| Platform | Storage Location |
-|----------|-----------------|
-| Android | SharedPreferences |
-| iOS | UserDefaults |
-| Web | localStorage |
+| Platform | Storage Location  |
+| -------- | ----------------- |
+| Android  | SharedPreferences |
+| iOS      | UserDefaults      |
+| Web      | localStorage      |
 
 ### Default Values by Platform
 
@@ -503,19 +519,19 @@ const config = {
   // Platform-specific defaults
   ...(platform === 'android' && {
     androidConfig: {
-      encryptionRequired: true
-    }
+      encryptionRequired: true,
+    },
   }),
   ...(platform === 'ios' && {
     iosConfig: {
-      touchIDAuthenticationAllowableReuseDuration: 0
-    }
+      touchIDAuthenticationAllowableReuseDuration: 0,
+    },
   }),
   ...(platform === 'web' && {
     webConfig: {
-      userVerification: 'preferred'
-    }
-  })
+      userVerification: 'preferred',
+    },
+  }),
 };
 
 await BiometricAuth.configure(config);
@@ -528,7 +544,7 @@ The plugin validates configuration:
 ```typescript
 try {
   await BiometricAuth.configure({
-    sessionDuration: -1 // Invalid
+    sessionDuration: -1, // Invalid
   });
 } catch (error) {
   // Error: sessionDuration must be positive
@@ -553,19 +569,19 @@ class DynamicConfig {
     const configs = {
       login: {
         sessionDuration: 1800000,
-        confirmationRequired: false
+        confirmationRequired: false,
       },
       transaction: {
         sessionDuration: 300000,
         confirmationRequired: true,
-        allowDeviceCredential: false
+        allowDeviceCredential: false,
       },
       settings: {
         sessionDuration: 600000,
-        confirmationRequired: true
-      }
+        confirmationRequired: true,
+      },
     };
-    
+
     await BiometricAuth.configure(configs[context]);
   }
 }
@@ -602,14 +618,14 @@ class DynamicConfig {
 // Helper to debug current configuration
 async function debugConfig() {
   await BiometricAuth.configure({
-    enableLogging: true
+    enableLogging: true,
   });
-  
+
   // Attempt authentication to see config in logs
   try {
     await BiometricAuth.authenticate();
   } catch (e) {
-    console.log('Config debug:', e);
+    consoleLog('Config debug:', e);
   }
 }
 ```

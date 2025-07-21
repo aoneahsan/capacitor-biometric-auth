@@ -9,6 +9,7 @@ Biometric authentication uses unique physical characteristics (fingerprint, face
 ### Which platforms are supported?
 
 The plugin supports:
+
 - **iOS**: 13.0+ (Touch ID, Face ID)
 - **Android**: API 23+ / Android 6.0+ (Fingerprint, Face, Iris)
 - **Web**: Modern browsers with WebAuthn support (Chrome 67+, Firefox 60+, Safari 14+)
@@ -16,6 +17,7 @@ The plugin supports:
 ### Do I need special hardware?
 
 Yes, the device must have biometric hardware:
+
 - **iOS**: Touch ID or Face ID capable device
 - **Android**: Fingerprint sensor, face recognition, or iris scanner
 - **Web**: Platform authenticator (Windows Hello, Touch ID, etc.)
@@ -23,6 +25,7 @@ Yes, the device must have biometric hardware:
 ### Is it secure?
 
 Yes! The plugin uses platform-specific secure hardware:
+
 - **iOS**: Secure Enclave and Keychain
 - **Android**: Hardware-backed Keystore
 - **Web**: WebAuthn with platform authenticators
@@ -40,7 +43,7 @@ if (isAvailable) {
   // Biometric is available
 } else {
   // Check reason for unavailability
-  console.log('Not available because:', reason);
+  consoleLog('Not available because:', reason);
 }
 ```
 
@@ -68,21 +71,21 @@ Yes, but customization varies by platform:
 ```typescript
 await BiometricAuth.authenticate({
   reason: 'Sign in to your account',
-  
+
   // Android customization
   androidOptions: {
     promptInfo: {
       title: 'Biometric Login',
       subtitle: 'Use your fingerprint',
       description: 'Touch the sensor',
-      negativeButtonText: 'Cancel'
-    }
+      negativeButtonText: 'Cancel',
+    },
   },
-  
+
   // iOS customization (limited)
   iosOptions: {
-    localizedFallbackTitle: 'Use Passcode'
-  }
+    localizedFallbackTitle: 'Use Passcode',
+  },
 });
 ```
 
@@ -93,7 +96,7 @@ Use the session management feature:
 ```typescript
 // Configure session duration
 await BiometricAuth.configure({
-  sessionDuration: 7 * 24 * 60 * 60 * 1000 // 7 days
+  sessionDuration: 7 * 24 * 60 * 60 * 1000, // 7 days
 });
 
 // Check if session is still valid
@@ -102,7 +105,7 @@ const sessionValid = await checkSession();
 if (!sessionValid) {
   // Re-authenticate
   await BiometricAuth.authenticate({
-    reason: 'Your session has expired'
+    reason: 'Your session has expired',
   });
 }
 ```
@@ -115,9 +118,9 @@ Yes! Implement a fallback mechanism:
 try {
   const result = await BiometricAuth.authenticate({
     reason: 'Sign in',
-    fallbackButtonTitle: 'Use Password'
+    fallbackButtonTitle: 'Use Password',
   });
-  
+
   if (result.isAuthenticated) {
     // Biometric success
   }
@@ -136,6 +139,7 @@ try {
 **Q: Why does Face ID require a usage description?**
 
 A: iOS requires privacy descriptions for Face ID. Add to `Info.plist`:
+
 ```xml
 <key>NSFaceIDUsageDescription</key>
 <string>Use Face ID for secure authentication</string>
@@ -144,6 +148,7 @@ A: iOS requires privacy descriptions for Face ID. Add to `Info.plist`:
 **Q: Can I detect if it's Touch ID or Face ID?**
 
 A: Yes:
+
 ```typescript
 const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
 const isFaceID = supportedBiometrics.includes(BiometricType.FACE_ID);
@@ -167,11 +172,12 @@ A: Use emulator with API 29+ and configure fingerprint in Settings > Security > 
 **Q: Can I require only strong biometrics?**
 
 A: Yes:
+
 ```typescript
 await BiometricAuth.configure({
   androidConfig: {
-    authenticators: BiometricManager.Authenticators.BIOMETRIC_STRONG
-  }
+    authenticators: BiometricManager.Authenticators.BIOMETRIC_STRONG,
+  },
 });
 ```
 
@@ -180,6 +186,7 @@ await BiometricAuth.configure({
 **Q: Does it work on all browsers?**
 
 A: WebAuthn support varies:
+
 - Chrome 67+
 - Firefox 60+
 - Safari 14+
@@ -197,14 +204,14 @@ A: The plugin focuses on platform authenticators (built-in biometrics), but WebA
 
 ### What do the error codes mean?
 
-| Error Code | Meaning | Solution |
-|------------|---------|----------|
-| `USER_CANCELLED` | User cancelled dialog | Normal behavior, handle gracefully |
-| `AUTHENTICATION_FAILED` | Biometric not recognized | Allow retry |
-| `LOCKOUT` | Too many failed attempts | Wait 30 seconds |
-| `LOCKOUT_PERMANENT` | Permanent lockout | User must unlock device |
-| `BIOMETRIC_NOT_ENROLLED` | No biometrics set up | Guide to device settings |
-| `NOT_AVAILABLE` | Hardware not available | Offer alternative auth |
+| Error Code               | Meaning                  | Solution                           |
+| ------------------------ | ------------------------ | ---------------------------------- |
+| `USER_CANCELLED`         | User cancelled dialog    | Normal behavior, handle gracefully |
+| `AUTHENTICATION_FAILED`  | Biometric not recognized | Allow retry                        |
+| `LOCKOUT`                | Too many failed attempts | Wait 30 seconds                    |
+| `LOCKOUT_PERMANENT`      | Permanent lockout        | User must unlock device            |
+| `BIOMETRIC_NOT_ENROLLED` | No biometrics set up     | Guide to device settings           |
+| `NOT_AVAILABLE`          | Hardware not available   | Offer alternative auth             |
 
 ### How do I handle lockouts?
 
@@ -249,6 +256,7 @@ if (!isAvailable) {
 ### Is biometric data stored anywhere?
 
 **No!** The plugin never stores biometric data. It only stores:
+
 - Encrypted credentials (optional)
 - Session tokens
 - Configuration settings
@@ -258,6 +266,7 @@ Biometric matching happens in secure hardware.
 ### Can someone bypass biometric authentication?
 
 The plugin uses platform security features:
+
 - iOS: Secure Enclave
 - Android: Hardware-backed Keystore
 - Web: WebAuthn security model
@@ -274,8 +283,8 @@ await BiometricAuth.authenticate({
   reason: 'Confirm payment of $100',
   disableBackup: true, // No fallback
   androidOptions: {
-    confirmationRequired: true // Require explicit confirmation
-  }
+    confirmationRequired: true, // Require explicit confirmation
+  },
 });
 ```
 
@@ -286,8 +295,8 @@ Configure to invalidate on changes:
 ```typescript
 await BiometricAuth.configure({
   androidConfig: {
-    invalidatedByBiometricEnrollment: true
-  }
+    invalidatedByBiometricEnrollment: true,
+  },
 });
 ```
 
@@ -302,6 +311,7 @@ await BiometricAuth.configure({
 ### Why does authentication always fail?
 
 Common causes:
+
 1. Testing on simulator/emulator (use real device)
 2. No biometrics enrolled
 3. Corrupted credentials (call `deleteCredentials()`)
@@ -309,6 +319,7 @@ Common causes:
 ### Why is the dialog not showing?
 
 Check:
+
 1. App is in foreground
 2. Biometric is available
 3. No other authentication in progress
@@ -319,7 +330,7 @@ Enable logging:
 
 ```typescript
 await BiometricAuth.configure({
-  enableLogging: true
+  enableLogging: true,
 });
 
 // Check platform-specific logs:
@@ -333,6 +344,7 @@ await BiometricAuth.configure({
 ### Is biometric authentication fast?
 
 Yes! Typical authentication takes:
+
 - Touch ID: ~500ms
 - Face ID: ~1000ms
 - Android Fingerprint: ~500ms
@@ -341,6 +353,7 @@ Yes! Typical authentication takes:
 ### How can I improve performance?
 
 1. **Cache availability checks**:
+
 ```typescript
 let cachedAvailability = null;
 
@@ -360,6 +373,7 @@ async function checkAvailability() {
 ### Does it affect app size?
 
 Minimal impact:
+
 - iOS: ~100KB (uses system frameworks)
 - Android: ~200KB (includes AndroidX Biometric)
 - Web: ~50KB (uses browser APIs)
@@ -369,12 +383,14 @@ Minimal impact:
 ### When should I use biometric authentication?
 
 Good use cases:
+
 - App login
 - Authorizing transactions
 - Accessing sensitive data
 - Quick re-authentication
 
 Not recommended for:
+
 - First-time registration
 - Password recovery
 - Shared devices
@@ -382,6 +398,7 @@ Not recommended for:
 ### How often should users re-authenticate?
 
 Depends on security requirements:
+
 - Banking: 5-10 minutes
 - Shopping: 30-60 minutes
 - Social: 1-7 days
@@ -389,11 +406,12 @@ Depends on security requirements:
 ### Should I force biometric authentication?
 
 No! Always provide alternatives:
+
 ```typescript
 await BiometricAuth.authenticate({
   reason: 'Sign in',
   fallbackButtonTitle: 'Use Password',
-  disableBackup: false // Allow fallback
+  disableBackup: false, // Allow fallback
 });
 ```
 

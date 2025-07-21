@@ -35,7 +35,7 @@ interface BiometricAvailabilityResult {
 enum BiometricUnavailableReason {
   NO_HARDWARE = 'NO_HARDWARE',
   NO_ENROLLED_BIOMETRICS = 'NO_ENROLLED_BIOMETRICS',
-  BIOMETRIC_UNAVAILABLE = 'BIOMETRIC_UNAVAILABLE'
+  BIOMETRIC_UNAVAILABLE = 'BIOMETRIC_UNAVAILABLE',
 }
 ```
 
@@ -47,12 +47,12 @@ import { BiometricAuth } from 'capacitor-biometric-authentication';
 async function checkAvailability() {
   try {
     const result = await BiometricAuth.isAvailable();
-    
+
     if (result.isAvailable) {
-      console.log('Biometric authentication is available');
+      consoleLog('Biometric authentication is available');
     } else {
-      console.log('Not available. Reason:', result.reason);
-      
+      consoleLog('Not available. Reason:', result.reason);
+
       // Handle specific reasons
       switch (result.reason) {
         case 'NO_HARDWARE':
@@ -104,7 +104,7 @@ enum BiometricType {
   FINGERPRINT = 'FINGERPRINT',
   FACE = 'FACE',
   IRIS = 'IRIS',
-  DEVICE_CREDENTIAL = 'DEVICE_CREDENTIAL'
+  DEVICE_CREDENTIAL = 'DEVICE_CREDENTIAL',
 }
 ```
 
@@ -113,15 +113,17 @@ enum BiometricType {
 ```typescript
 async function checkSupportedTypes() {
   try {
-    const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
-    
-    console.log('Supported types:', supportedBiometrics);
-    
+    const { supportedBiometrics } =
+      await BiometricAuth.getSupportedBiometrics();
+
+    consoleLog('Supported types:', supportedBiometrics);
+
     // Check for specific types
     const hasFaceID = supportedBiometrics.includes(BiometricType.FACE_ID);
-    const hasFingerprint = supportedBiometrics.includes(BiometricType.FINGERPRINT) || 
-                          supportedBiometrics.includes(BiometricType.TOUCH_ID);
-    
+    const hasFingerprint =
+      supportedBiometrics.includes(BiometricType.FINGERPRINT) ||
+      supportedBiometrics.includes(BiometricType.TOUCH_ID);
+
     // Update UI based on available types
     if (hasFaceID) {
       showFaceIDButton();
@@ -136,11 +138,11 @@ async function checkSupportedTypes() {
 
 #### Platform-Specific Types
 
-| Platform | Possible Types |
-|----------|---------------|
-| iOS | `TOUCH_ID`, `FACE_ID` |
-| Android | `FINGERPRINT`, `FACE`, `IRIS`, `DEVICE_CREDENTIAL` |
-| Web | `FINGERPRINT`, `FACE` (depends on authenticator) |
+| Platform | Possible Types                                     |
+| -------- | -------------------------------------------------- |
+| iOS      | `TOUCH_ID`, `FACE_ID`                              |
+| Android  | `FINGERPRINT`, `FACE`, `IRIS`, `DEVICE_CREDENTIAL` |
+| Web      | `FINGERPRINT`, `FACE` (depends on authenticator)   |
 
 ---
 
@@ -159,34 +161,34 @@ authenticate(options?: BiometricAuthOptions): Promise<BiometricAuthResult>
 ```typescript
 interface BiometricAuthOptions {
   // Common options
-  reason?: string;                    // Reason for authentication
-  fallbackButtonTitle?: string;       // Custom fallback button text
-  cancelButtonTitle?: string;         // Custom cancel button text
-  disableBackup?: boolean;           // Disable fallback methods
-  maxAttempts?: number;              // Maximum authentication attempts
-  
+  reason?: string; // Reason for authentication
+  fallbackButtonTitle?: string; // Custom fallback button text
+  cancelButtonTitle?: string; // Custom cancel button text
+  disableBackup?: boolean; // Disable fallback methods
+  maxAttempts?: number; // Maximum authentication attempts
+
   // iOS-specific options
   iosOptions?: {
     localizedFallbackTitle?: string; // iOS fallback button text
     biometryType?: 'touchID' | 'faceID';
   };
-  
+
   // Android-specific options
   androidOptions?: {
     promptInfo?: {
-      title?: string;              // Dialog title
-      subtitle?: string;           // Dialog subtitle
-      description?: string;        // Dialog description
+      title?: string; // Dialog title
+      subtitle?: string; // Dialog subtitle
+      description?: string; // Dialog description
       negativeButtonText?: string; // Negative button text
     };
-    encryptionRequired?: boolean;   // Require encryption
+    encryptionRequired?: boolean; // Require encryption
     confirmationRequired?: boolean; // Require user confirmation
   };
-  
+
   // Web-specific options
   webOptions?: {
-    challenge?: string;            // WebAuthn challenge
-    allowCredentials?: string[];   // Allowed credential IDs
+    challenge?: string; // WebAuthn challenge
+    allowCredentials?: string[]; // Allowed credential IDs
   };
 }
 ```
@@ -196,7 +198,7 @@ interface BiometricAuthOptions {
 ```typescript
 interface BiometricAuthResult {
   isAuthenticated: boolean;
-  credentialId?: string;           // Credential ID (Web only)
+  credentialId?: string; // Credential ID (Web only)
   authenticationType?: BiometricType; // Type used for authentication
 }
 ```
@@ -209,12 +211,12 @@ interface BiometricAuthResult {
 async function basicAuth() {
   try {
     const result = await BiometricAuth.authenticate({
-      reason: 'Please authenticate to continue'
+      reason: 'Please authenticate to continue',
     });
-    
+
     if (result.isAuthenticated) {
-      console.log('Authentication successful');
-      console.log('Used:', result.authenticationType);
+      consoleLog('Authentication successful');
+      consoleLog('Used:', result.authenticationType);
     }
   } catch (error) {
     console.error('Authentication failed:', error);
@@ -235,12 +237,12 @@ async function customUIAuth() {
         title: 'Biometric Login',
         subtitle: 'Use your fingerprint or face',
         description: 'Quick and secure authentication',
-        negativeButtonText: 'Use Password'
-      }
+        negativeButtonText: 'Use Password',
+      },
     },
     iosOptions: {
-      localizedFallbackTitle: 'Enter Passcode'
-    }
+      localizedFallbackTitle: 'Enter Passcode',
+    },
   });
 }
 ```
@@ -251,12 +253,12 @@ async function customUIAuth() {
 async function strictBiometricAuth() {
   const result = await BiometricAuth.authenticate({
     reason: 'Biometric required for this action',
-    disableBackup: true,  // No fallback allowed
-    maxAttempts: 1,       // Single attempt only
+    disableBackup: true, // No fallback allowed
+    maxAttempts: 1, // Single attempt only
     androidOptions: {
       encryptionRequired: true,
-      confirmationRequired: true
-    }
+      confirmationRequired: true,
+    },
   });
 }
 ```
@@ -323,8 +325,8 @@ async function logout() {
   try {
     // Clear stored credentials
     await BiometricAuth.deleteCredentials();
-    console.log('Credentials deleted successfully');
-    
+    consoleLog('Credentials deleted successfully');
+
     // Clear other app data
     clearUserSession();
     navigateToLogin();
@@ -364,36 +366,36 @@ configure(config: BiometricAuthConfig): Promise<void>
 ```typescript
 interface BiometricAuthConfig {
   // Session configuration
-  sessionDuration?: number;        // Session duration in milliseconds
-  sessionKey?: string;            // Custom session storage key
-  
+  sessionDuration?: number; // Session duration in milliseconds
+  sessionKey?: string; // Custom session storage key
+
   // Security options
-  encryptionKey?: string;         // Custom encryption key
-  storagePrefix?: string;         // Storage key prefix
-  
+  encryptionKey?: string; // Custom encryption key
+  storagePrefix?: string; // Storage key prefix
+
   // Behavior options
   allowDeviceCredential?: boolean; // Allow device PIN/pattern/password
-  confirmationRequired?: boolean;  // Require explicit confirmation
-  enableLogging?: boolean;        // Enable debug logging
-  
+  confirmationRequired?: boolean; // Require explicit confirmation
+  enableLogging?: boolean; // Enable debug logging
+
   // Platform-specific
   androidConfig?: {
-    keystoreAlias?: string;       // Android Keystore alias
+    keystoreAlias?: string; // Android Keystore alias
     userAuthenticationRequired?: boolean;
     invalidatedByBiometricEnrollment?: boolean;
     strongBoxBacked?: boolean;
   };
-  
+
   iosConfig?: {
-    accessGroup?: string;         // iOS Keychain access group
+    accessGroup?: string; // iOS Keychain access group
     touchIDAuthenticationAllowableReuseDuration?: number;
   };
-  
+
   webConfig?: {
-    rpId?: string;               // Relying party ID
-    rpName?: string;             // Relying party name
+    rpId?: string; // Relying party ID
+    rpName?: string; // Relying party name
     userVerification?: 'required' | 'preferred' | 'discouraged';
-    timeout?: number;            // Authentication timeout
+    timeout?: number; // Authentication timeout
     attestation?: 'none' | 'indirect' | 'direct';
   };
 }
@@ -408,7 +410,7 @@ async function setupPlugin() {
   await BiometricAuth.configure({
     sessionDuration: 30 * 60 * 1000, // 30 minutes
     enableLogging: true,
-    allowDeviceCredential: true
+    allowDeviceCredential: true,
   });
 }
 ```
@@ -421,18 +423,18 @@ async function configurePlatforms() {
     androidConfig: {
       keystoreAlias: 'MyAppBiometric',
       userAuthenticationRequired: true,
-      strongBoxBacked: true  // Use hardware security module if available
+      strongBoxBacked: true, // Use hardware security module if available
     },
     iosConfig: {
       accessGroup: 'group.com.mycompany.myapp',
-      touchIDAuthenticationAllowableReuseDuration: 10 // 10 seconds
+      touchIDAuthenticationAllowableReuseDuration: 10, // 10 seconds
     },
     webConfig: {
       rpId: 'myapp.com',
       rpName: 'My Awesome App',
       userVerification: 'preferred',
-      timeout: 60000 // 60 seconds
-    }
+      timeout: 60000, // 60 seconds
+    },
   });
 }
 ```
@@ -442,14 +444,14 @@ async function configurePlatforms() {
 ```typescript
 async function highSecurityConfig() {
   await BiometricAuth.configure({
-    sessionDuration: 5 * 60 * 1000,  // 5 minutes only
-    allowDeviceCredential: false,     // Biometric only
-    confirmationRequired: true,       // Always require confirmation
+    sessionDuration: 5 * 60 * 1000, // 5 minutes only
+    allowDeviceCredential: false, // Biometric only
+    confirmationRequired: true, // Always require confirmation
     encryptionKey: generateSecureKey(), // Custom encryption
     androidConfig: {
       invalidatedByBiometricEnrollment: true, // Invalidate on new fingerprint
-      strongBoxBacked: true
-    }
+      strongBoxBacked: true,
+    },
   });
 }
 ```
@@ -473,7 +475,7 @@ enum BiometricErrorCode {
   NOT_AVAILABLE = 'NOT_AVAILABLE',
   PERMISSION_DENIED = 'PERMISSION_DENIED',
   BIOMETRIC_NOT_ENROLLED = 'BIOMETRIC_NOT_ENROLLED',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR'
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
 ```
 
@@ -483,13 +485,13 @@ For complete type definitions, see [Type Definitions](./types.md).
 
 ## Method Availability by Platform
 
-| Method | Android | iOS | Web |
-|--------|---------|-----|-----|
-| `isAvailable()` | ✅ | ✅ | ✅ |
-| `getSupportedBiometrics()` | ✅ | ✅ | ✅ |
-| `authenticate()` | ✅ | ✅ | ✅ |
-| `deleteCredentials()` | ✅ | ✅ | ✅ |
-| `configure()` | ✅ | ✅ | ✅ |
+| Method                     | Android | iOS | Web |
+| -------------------------- | ------- | --- | --- |
+| `isAvailable()`            | ✅      | ✅  | ✅  |
+| `getSupportedBiometrics()` | ✅      | ✅  | ✅  |
+| `authenticate()`           | ✅      | ✅  | ✅  |
+| `deleteCredentials()`      | ✅      | ✅  | ✅  |
+| `configure()`              | ✅      | ✅  | ✅  |
 
 ## Best Practices
 

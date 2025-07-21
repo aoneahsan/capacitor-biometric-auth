@@ -23,20 +23,20 @@ await BiometricAuth.authenticate({
       title: 'Secure Login',
       subtitle: 'Access your account',
       description: 'Place your finger on the sensor or look at the camera',
-      negativeButtonText: 'Use PIN Instead'
-    }
-  }
+      negativeButtonText: 'Use PIN Instead',
+    },
+  },
 });
 ```
 
 ### Complete Android Options
 
-| Option | Type | Description | Example |
-|--------|------|-------------|---------|
-| `title` | string | Main dialog title | "Biometric Authentication" |
-| `subtitle` | string | Secondary title | "Verify your identity" |
-| `description` | string | Helper text | "Touch the fingerprint sensor" |
-| `negativeButtonText` | string | Cancel/fallback button | "Cancel" or "Use Password" |
+| Option               | Type   | Description            | Example                        |
+| -------------------- | ------ | ---------------------- | ------------------------------ |
+| `title`              | string | Main dialog title      | "Biometric Authentication"     |
+| `subtitle`           | string | Secondary title        | "Verify your identity"         |
+| `description`        | string | Helper text            | "Touch the fingerprint sensor" |
+| `negativeButtonText` | string | Cancel/fallback button | "Cancel" or "Use Password"     |
 
 ### Visual Examples
 
@@ -46,9 +46,9 @@ await BiometricAuth.authenticate({
   androidOptions: {
     promptInfo: {
       title: 'Unlock',
-      negativeButtonText: 'Cancel'
-    }
-  }
+      negativeButtonText: 'Cancel',
+    },
+  },
 });
 
 // Detailed dialog
@@ -57,10 +57,11 @@ await BiometricAuth.authenticate({
     promptInfo: {
       title: '🔒 Secure Access Required',
       subtitle: 'Banking App Authentication',
-      description: 'Use your registered biometric to access your account securely',
-      negativeButtonText: 'Use 6-Digit PIN'
-    }
-  }
+      description:
+        'Use your registered biometric to access your account securely',
+      negativeButtonText: 'Use 6-Digit PIN',
+    },
+  },
 });
 
 // Transaction confirmation
@@ -70,10 +71,10 @@ await BiometricAuth.authenticate({
       title: 'Confirm Payment',
       subtitle: '$1,234.56 to John Doe',
       description: 'Authenticate to complete this transaction',
-      negativeButtonText: 'Cancel Payment'
+      negativeButtonText: 'Cancel Payment',
     },
-    confirmationRequired: true
-  }
+    confirmationRequired: true,
+  },
 });
 ```
 
@@ -84,8 +85,8 @@ await BiometricAuth.authenticate({
 await BiometricAuth.authenticate({
   androidOptions: {
     confirmationRequired: true, // Shows "Confirm" button after biometric
-    encryptionRequired: true    // Ensures hardware-backed security
-  }
+    encryptionRequired: true, // Ensures hardware-backed security
+  },
 });
 ```
 
@@ -98,22 +99,22 @@ const strings = {
     title: 'Autenticación Biométrica',
     subtitle: 'Accede a tu cuenta',
     description: 'Coloca tu dedo en el sensor',
-    negativeButtonText: 'Usar Contraseña'
+    negativeButtonText: 'Usar Contraseña',
   },
   en: {
     title: 'Biometric Authentication',
     subtitle: 'Access your account',
     description: 'Place your finger on the sensor',
-    negativeButtonText: 'Use Password'
-  }
+    negativeButtonText: 'Use Password',
+  },
 };
 
 const locale = getDeviceLocale(); // 'es' or 'en'
 
 await BiometricAuth.authenticate({
   androidOptions: {
-    promptInfo: strings[locale]
-  }
+    promptInfo: strings[locale],
+  },
 });
 ```
 
@@ -127,18 +128,18 @@ iOS provides limited customization for the system authentication dialog:
 await BiometricAuth.authenticate({
   reason: 'Unlock MyApp to continue', // Required, shown in dialog
   iosOptions: {
-    localizedFallbackTitle: 'Enter Passcode' // Fallback button text
-  }
+    localizedFallbackTitle: 'Enter Passcode', // Fallback button text
+  },
 });
 ```
 
 ### iOS Text Customization
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `reason` | Main authentication message | Required |
-| `localizedFallbackTitle` | Fallback button text | "Enter Password" |
-| `cancelButtonTitle` | Cancel button text | "Cancel" |
+| Option                   | Description                 | Default          |
+| ------------------------ | --------------------------- | ---------------- |
+| `reason`                 | Main authentication message | Required         |
+| `localizedFallbackTitle` | Fallback button text        | "Enter Password" |
+| `cancelButtonTitle`      | Cancel button text          | "Cancel"         |
 
 ### Face ID vs Touch ID
 
@@ -151,13 +152,13 @@ const isFaceID = supportedBiometrics.includes(BiometricType.FACE_ID);
 
 // Customize message
 await BiometricAuth.authenticate({
-  reason: isFaceID 
+  reason: isFaceID
     ? 'Look at your device to unlock'
     : 'Touch the Home button to unlock',
   iosOptions: {
     localizedFallbackTitle: 'Use Passcode',
-    biometryType: isFaceID ? 'faceID' : 'touchID'
-  }
+    biometryType: isFaceID ? 'faceID' : 'touchID',
+  },
 });
 ```
 
@@ -166,18 +167,18 @@ await BiometricAuth.authenticate({
 ```typescript
 // Localized strings
 const iosStrings = {
-  'en': {
+  en: {
     reason: 'Authenticate to access your account',
-    fallback: 'Enter Passcode'
+    fallback: 'Enter Passcode',
   },
-  'es': {
+  es: {
     reason: 'Autentícate para acceder a tu cuenta',
-    fallback: 'Ingresar Código'
+    fallback: 'Ingresar Código',
   },
-  'fr': {
+  fr: {
     reason: 'Authentifiez-vous pour accéder à votre compte',
-    fallback: 'Entrer le code'
-  }
+    fallback: 'Entrer le code',
+  },
 };
 
 const lang = getCurrentLanguage();
@@ -185,8 +186,8 @@ const lang = getCurrentLanguage();
 await BiometricAuth.authenticate({
   reason: iosStrings[lang].reason,
   iosOptions: {
-    localizedFallbackTitle: iosStrings[lang].fallback
-  }
+    localizedFallbackTitle: iosStrings[lang].fallback,
+  },
 });
 ```
 
@@ -200,8 +201,8 @@ Web browsers control the authentication dialog, but you can influence the experi
 await BiometricAuth.configure({
   webConfig: {
     rpName: 'My Awesome App', // Shown in browser dialog
-    userVerification: 'required' // Affects dialog behavior
-  }
+    userVerification: 'required', // Affects dialog behavior
+  },
 });
 ```
 
@@ -213,22 +214,22 @@ Since browser dialogs can't be customized, create your own pre-authentication UI
 // Custom UI component
 function BiometricButton() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  
+
   const handleAuth = async () => {
     setIsAuthenticating(true);
-    
+
     // Show custom UI before browser dialog
     showCustomDialog({
       title: 'Biometric Authentication',
       message: 'Your browser will now request biometric authentication',
       icon: '🔐'
     });
-    
+
     try {
       await BiometricAuth.authenticate({
         reason: 'Sign in to your account'
       });
-      
+
       // Success UI
       showSuccessDialog();
     } catch (error) {
@@ -238,7 +239,7 @@ function BiometricButton() {
       setIsAuthenticating(false);
     }
   };
-  
+
   return (
     <button onClick={handleAuth} disabled={isAuthenticating}>
       {isAuthenticating ? (
@@ -259,7 +260,7 @@ Show appropriate icons based on platform and biometric type:
 function getBiometricIcon() {
   const platform = Capacitor.getPlatform();
   const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
-  
+
   if (platform === 'web') {
     // Web icons
     return '🔐'; // Generic security icon
@@ -296,7 +297,7 @@ class BiometricUI {
       description: 'Use your biometric to continue',
       fallbackText: 'Use Alternative Method',
       confirmText: 'Confirm',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
     },
     banking: {
       title: '🏦 Secure Banking Access',
@@ -304,7 +305,7 @@ class BiometricUI {
       description: 'Authenticate to access your accounts',
       fallbackText: 'Use 6-Digit PIN',
       confirmText: 'Authorize',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
     },
     medical: {
       title: '🏥 Medical Records Access',
@@ -312,20 +313,20 @@ class BiometricUI {
       description: 'Verify identity to view health information',
       fallbackText: 'Use Password',
       confirmText: 'Grant Access',
-      cancelText: 'Deny'
-    }
+      cancelText: 'Deny',
+    },
   };
-  
+
   async authenticate(theme: keyof typeof this.themes = 'default') {
     const config = this.themes[theme];
     const platform = Capacitor.getPlatform();
-    
+
     const options: BiometricAuthOptions = {
       reason: config.title,
       fallbackButtonTitle: config.fallbackText,
-      cancelButtonTitle: config.cancelText
+      cancelButtonTitle: config.cancelText,
     };
-    
+
     // Platform-specific customization
     if (platform === 'android') {
       options.androidOptions = {
@@ -333,15 +334,15 @@ class BiometricUI {
           title: config.title,
           subtitle: config.subtitle,
           description: config.description,
-          negativeButtonText: config.fallbackText
-        }
+          negativeButtonText: config.fallbackText,
+        },
       };
     } else if (platform === 'ios') {
       options.iosOptions = {
-        localizedFallbackTitle: config.fallbackText
+        localizedFallbackTitle: config.fallbackText,
       };
     }
-    
+
     return await BiometricAuth.authenticate(options);
   }
 }
@@ -357,20 +358,20 @@ class CustomBiometricFlow {
     // 1. Check availability with custom UI
     const availability = await this.checkWithUI();
     if (!availability) return;
-    
+
     // 2. Show pre-authentication screen
     await this.showPreAuthScreen();
-    
+
     // 3. Perform authentication
     const result = await this.authenticateWithUI();
-    
+
     // 4. Show result
     await this.showResultScreen(result);
   }
-  
+
   private async checkWithUI() {
     const { isAvailable, reason } = await BiometricAuth.isAvailable();
-    
+
     if (!isAvailable) {
       // Show custom unavailable UI
       this.showUnavailableDialog({
@@ -379,32 +380,33 @@ class CustomBiometricFlow {
         actions: [
           {
             text: 'Go to Settings',
-            handler: () => this.openDeviceSettings()
+            handler: () => this.openDeviceSettings(),
           },
           {
             text: 'Use Password',
-            handler: () => this.showPasswordLogin()
-          }
-        ]
+            handler: () => this.showPasswordLogin(),
+          },
+        ],
       });
       return false;
     }
-    
+
     return true;
   }
-  
+
   private async showPreAuthScreen() {
     // Show instruction screen
-    const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
-    
+    const { supportedBiometrics } =
+      await BiometricAuth.getSupportedBiometrics();
+
     this.showInstructionDialog({
       title: 'Ready to Authenticate',
       icon: this.getBiometricIcon(supportedBiometrics),
       message: this.getInstructionText(supportedBiometrics),
-      continueButton: 'Authenticate Now'
+      continueButton: 'Authenticate Now',
     });
   }
-  
+
   private getInstructionText(types: BiometricType[]): string {
     if (types.includes(BiometricType.FACE_ID)) {
       return 'Look at your device when prompted';
@@ -427,9 +429,10 @@ await BiometricAuth.authenticate({
   androidOptions: {
     promptInfo: {
       title: 'Fingerprint Authentication',
-      description: 'Place and hold your finger on the sensor until you feel a vibration'
-    }
-  }
+      description:
+        'Place and hold your finger on the sensor until you feel a vibration',
+    },
+  },
 });
 ```
 
@@ -440,15 +443,17 @@ await BiometricAuth.authenticate({
 const isHighContrast = window.matchMedia('(prefers-contrast: high)').matches;
 
 // Adjust UI accordingly
-const buttonStyle = isHighContrast ? {
-  backgroundColor: '#000',
-  color: '#FFF',
-  border: '2px solid #FFF'
-} : {
-  backgroundColor: '#007AFF',
-  color: '#FFF',
-  border: 'none'
-};
+const buttonStyle = isHighContrast
+  ? {
+      backgroundColor: '#000',
+      color: '#FFF',
+      border: '2px solid #FFF',
+    }
+  : {
+      backgroundColor: '#007AFF',
+      color: '#FFF',
+      border: 'none',
+    };
 ```
 
 ## Animation and Feedback
@@ -462,54 +467,56 @@ class BiometricFeedback {
     if ('vibrate' in navigator) {
       navigator.vibrate(50);
     }
-    
+
     // Visual feedback
     this.showAnimation({
       type: 'success',
       icon: '✓',
       color: '#4CAF50',
-      duration: 1000
+      duration: 1000,
     });
   }
-  
+
   async showFailure(error: any) {
     // Different feedback for different errors
     const feedback = this.getErrorFeedback(error.code);
-    
+
     // Haptic pattern for errors
     if ('vibrate' in navigator) {
       navigator.vibrate([50, 50, 50]); // Three short vibrations
     }
-    
+
     this.showAnimation({
       type: 'error',
       icon: feedback.icon,
       color: '#F44336',
       message: feedback.message,
-      duration: 2000
+      duration: 2000,
     });
   }
-  
+
   private getErrorFeedback(code: string) {
     const feedback = {
-      'USER_CANCELLED': {
+      USER_CANCELLED: {
         icon: '✕',
-        message: 'Authentication cancelled'
+        message: 'Authentication cancelled',
       },
-      'LOCKOUT': {
+      LOCKOUT: {
         icon: '🔒',
-        message: 'Too many attempts. Try again later'
+        message: 'Too many attempts. Try again later',
       },
-      'NOT_ENROLLED': {
+      NOT_ENROLLED: {
         icon: '⚠️',
-        message: 'No biometrics enrolled'
+        message: 'No biometrics enrolled',
+      },
+    };
+
+    return (
+      feedback[code] || {
+        icon: '⚠️',
+        message: 'Authentication failed',
       }
-    };
-    
-    return feedback[code] || {
-      icon: '⚠️',
-      message: 'Authentication failed'
-    };
+    );
   }
 }
 ```
@@ -522,11 +529,11 @@ class BiometricFeedback {
 const testLanguages = ['en', 'es', 'fr', 'de', 'ja'];
 
 for (const lang of testLanguages) {
-  console.log(`Testing ${lang} localization...`);
-  
+  consoleLog(`Testing ${lang} localization...`);
+
   await BiometricAuth.authenticate({
     reason: getLocalizedString(lang, 'authReason'),
-    fallbackButtonTitle: getLocalizedString(lang, 'fallback')
+    fallbackButtonTitle: getLocalizedString(lang, 'fallback'),
   });
 }
 ```
@@ -539,9 +546,9 @@ const themes = ['light', 'dark', 'highContrast'];
 
 for (const theme of themes) {
   document.body.className = `theme-${theme}`;
-  
+
   await BiometricAuth.authenticate({
-    reason: `Testing ${theme} theme`
+    reason: `Testing ${theme} theme`,
   });
 }
 ```

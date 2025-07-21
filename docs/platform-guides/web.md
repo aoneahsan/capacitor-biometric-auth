@@ -10,16 +10,17 @@ The web implementation uses the Web Authentication API (WebAuthn) to provide bio
 
 ### Browser Support
 
-| Browser | Minimum Version | Platform Authenticator |
-|---------|----------------|----------------------|
-| Chrome | 67+ | Windows Hello, Touch ID, Android |
-| Firefox | 60+ | Windows Hello, Touch ID |
-| Safari | 14+ | Touch ID, Face ID (macOS/iOS) |
-| Edge | 18+ | Windows Hello |
+| Browser | Minimum Version | Platform Authenticator           |
+| ------- | --------------- | -------------------------------- |
+| Chrome  | 67+             | Windows Hello, Touch ID, Android |
+| Firefox | 60+             | Windows Hello, Touch ID          |
+| Safari  | 14+             | Touch ID, Face ID (macOS/iOS)    |
+| Edge    | 18+             | Windows Hello                    |
 
 ### HTTPS Requirement
 
 WebAuthn requires a secure context:
+
 - **HTTPS** is required for production
 - `localhost` is allowed for development
 - Self-signed certificates work for testing
@@ -54,13 +55,13 @@ await BiometricAuth.configure({
   webConfig: {
     rpId: 'example.com',
     rpName: 'My Awesome App',
-    userVerification: 'preferred'
-  }
+    userVerification: 'preferred',
+  },
 });
 
 // Authenticate user
 const result = await BiometricAuth.authenticate({
-  reason: 'Sign in to your account'
+  reason: 'Sign in to your account',
 });
 ```
 
@@ -70,20 +71,20 @@ const result = await BiometricAuth.authenticate({
 async function checkWebBiometric() {
   // Check if WebAuthn is supported
   if (!window.PublicKeyCredential) {
-    console.log('WebAuthn not supported');
+    consoleLog('WebAuthn not supported');
     return false;
   }
-  
+
   // Check for platform authenticator
-  const hasPlatformAuth = await PublicKeyCredential
-    .isUserVerifyingPlatformAuthenticatorAvailable();
-    
+  const hasPlatformAuth =
+    await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+
   if (hasPlatformAuth) {
-    console.log('Platform biometric available');
+    consoleLog('Platform biometric available');
   } else {
-    console.log('No platform biometric, USB key may work');
+    consoleLog('No platform biometric, USB key may work');
   }
-  
+
   return hasPlatformAuth;
 }
 ```
@@ -99,31 +100,31 @@ await BiometricAuth.configure({
   webConfig: {
     // Your domain (without protocol)
     rpId: 'myapp.com',
-    
+
     // Display name for your app
     rpName: 'My Application',
-    
+
     // Require user verification
     userVerification: 'required',
-    
+
     // Timeout for operations (ms)
     timeout: 60000,
-    
+
     // Attestation preference
-    attestation: 'none'
-  }
+    attestation: 'none',
+  },
 });
 ```
 
 ### Configuration Options
 
-| Option | Values | Description |
-|--------|---------|------------|
-| `rpId` | Domain string | Your website domain |
-| `rpName` | String | Display name for users |
+| Option             | Values                                 | Description                 |
+| ------------------ | -------------------------------------- | --------------------------- |
+| `rpId`             | Domain string                          | Your website domain         |
+| `rpName`           | String                                 | Display name for users      |
 | `userVerification` | `required`, `preferred`, `discouraged` | Biometric requirement level |
-| `timeout` | Number (ms) | Operation timeout |
-| `attestation` | `none`, `indirect`, `direct` | Attestation conveyance |
+| `timeout`          | Number (ms)                            | Operation timeout           |
+| `attestation`      | `none`, `indirect`, `direct`           | Attestation conveyance      |
 
 ## Registration Process
 
@@ -134,30 +135,30 @@ async function registerBiometric() {
   try {
     // Check availability first
     const { isAvailable } = await BiometricAuth.isAvailable();
-    
+
     if (!isAvailable) {
-      console.log('WebAuthn not available');
+      consoleLog('WebAuthn not available');
       return;
     }
-    
+
     // Configure for registration
     await BiometricAuth.configure({
       webConfig: {
         rpId: window.location.hostname,
         rpName: 'My App',
-        userVerification: 'required'
-      }
+        userVerification: 'required',
+      },
     });
-    
+
     // Perform initial authentication (creates credential)
     const result = await BiometricAuth.authenticate({
-      reason: 'Register your biometric for faster sign-in'
+      reason: 'Register your biometric for faster sign-in',
     });
-    
+
     if (result.isAuthenticated && result.credentialId) {
       // Save credential ID for future use
       await saveCredentialId(result.credentialId);
-      console.log('Biometric registered successfully');
+      consoleLog('Biometric registered successfully');
     }
   } catch (error) {
     console.error('Registration failed:', error);
@@ -170,21 +171,21 @@ async function registerBiometric() {
 ```typescript
 class WebAuthnManager {
   private credentialIds: string[] = [];
-  
+
   async init() {
     // Load saved credential IDs
     this.credentialIds = await this.loadCredentialIds();
   }
-  
+
   async authenticate() {
     const result = await BiometricAuth.authenticate({
       reason: 'Sign in to your account',
       webOptions: {
         // Provide known credential IDs for faster auth
-        allowCredentials: this.credentialIds
-      }
+        allowCredentials: this.credentialIds,
+      },
     });
-    
+
     if (result.isAuthenticated && result.credentialId) {
       // Update credential ID if new
       if (!this.credentialIds.includes(result.credentialId)) {
@@ -192,17 +193,18 @@ class WebAuthnManager {
         await this.saveCredentialIds();
       }
     }
-    
+
     return result;
   }
-  
+
   private async loadCredentialIds(): Promise<string[]> {
     const stored = localStorage.getItem('webauthn_credentials');
     return stored ? JSON.parse(stored) : [];
   }
-  
+
   private async saveCredentialIds() {
-    localStorage.setItem('webauthn_credentials', 
+    localStorage.setItem(
+      'webauthn_credentials',
       JSON.stringify(this.credentialIds)
     );
   }
@@ -220,9 +222,9 @@ if (navigator.userAgent.includes('Windows')) {
   // - Fingerprint readers
   // - Face recognition (with IR camera)
   // - PIN as fallback
-  
+
   await BiometricAuth.authenticate({
-    reason: 'Sign in with Windows Hello'
+    reason: 'Sign in with Windows Hello',
   });
 }
 ```
@@ -236,9 +238,9 @@ if (navigator.userAgent.includes('Mac')) {
   // - MacBook Pro with Touch Bar
   // - MacBook Air with Touch ID
   // - Magic Keyboard with Touch ID
-  
+
   await BiometricAuth.authenticate({
-    reason: 'Use Touch ID to sign in'
+    reason: 'Use Touch ID to sign in',
   });
 }
 ```
@@ -253,9 +255,9 @@ if (isMobile) {
   // Platform authenticators available:
   // - iOS: Touch ID / Face ID (Safari)
   // - Android: Fingerprint / Face (Chrome)
-  
+
   await BiometricAuth.authenticate({
-    reason: 'Use your device biometric'
+    reason: 'Use your device biometric',
   });
 }
 ```
@@ -270,19 +272,19 @@ try {
 } catch (error) {
   if (error.name === 'NotAllowedError') {
     // User denied permission or timeout
-    console.log('Authentication denied or timed out');
+    consoleLog('Authentication denied or timed out');
   } else if (error.name === 'SecurityError') {
     // Invalid domain or protocol
-    console.log('Security error - check HTTPS');
+    consoleLog('Security error - check HTTPS');
   } else if (error.name === 'AbortError') {
     // Operation was aborted
-    console.log('Authentication aborted');
+    consoleLog('Authentication aborted');
   } else if (error.name === 'InvalidStateError') {
     // Authenticator already registered
-    console.log('Credential already exists');
+    consoleLog('Credential already exists');
   } else if (error.name === 'NotSupportedError') {
     // Algorithm or option not supported
-    console.log('Feature not supported');
+    consoleLog('Feature not supported');
   }
 }
 ```
@@ -294,14 +296,14 @@ async function authenticateWithTimeout() {
   try {
     await BiometricAuth.configure({
       webConfig: {
-        timeout: 30000 // 30 seconds
-      }
+        timeout: 30000, // 30 seconds
+      },
     });
-    
+
     const result = await BiometricAuth.authenticate({
-      reason: 'Please authenticate within 30 seconds'
+      reason: 'Please authenticate within 30 seconds',
     });
-    
+
     return result;
   } catch (error) {
     if (error.name === 'NotAllowedError') {
@@ -330,41 +332,41 @@ crypto.getRandomValues(challenge);
 // Secure credential storage implementation
 class SecureCredentialStore {
   private readonly STORAGE_KEY = 'biometric_auth_credentials';
-  
+
   async storeCredential(credentialId: string, metadata: any) {
     // Encrypt sensitive data
     const encrypted = await this.encrypt({
       credentialId,
       metadata,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     localStorage.setItem(this.STORAGE_KEY, encrypted);
   }
-  
+
   async getCredentials(): Promise<string[]> {
     const encrypted = localStorage.getItem(this.STORAGE_KEY);
     if (!encrypted) return [];
-    
+
     const decrypted = await this.decrypt(encrypted);
     return decrypted.credentialId;
   }
-  
+
   private async encrypt(data: any): Promise<string> {
     // Use Web Crypto API for encryption
     const key = await this.deriveKey();
     const encoded = new TextEncoder().encode(JSON.stringify(data));
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    
+
     const encrypted = await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv },
       key,
       encoded
     );
-    
+
     return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
   }
-  
+
   private async decrypt(encrypted: string): Promise<any> {
     // Decrypt using Web Crypto API
     // Implementation details...
@@ -380,10 +382,10 @@ await BiometricAuth.configure({
   webConfig: {
     // Must match your domain exactly
     rpId: 'app.example.com',
-    
+
     // For subdomains, use parent domain
     // rpId: 'example.com' // Works for *.example.com
-  }
+  },
 });
 ```
 
@@ -398,12 +400,12 @@ async function setupConditionalUI() {
   // Check for autofill UI support
   if ('PasswordCredential' in window || 'FederatedCredential' in window) {
     const { isAvailable } = await BiometricAuth.isAvailable();
-    
+
     if (isAvailable) {
       // Add autocomplete attribute
       const input = document.getElementById('username');
       input.setAttribute('autocomplete', 'username webauthn');
-      
+
       // Browser will show biometric option in autofill
     }
   }
@@ -418,28 +420,28 @@ Handle multiple registered devices:
 class MultiDeviceAuth {
   async authenticateWithDevice(deviceName?: string) {
     const credentials = await this.getStoredCredentials();
-    
+
     // Filter by device if specified
     const allowList = deviceName
-      ? credentials.filter(c => c.device === deviceName)
+      ? credentials.filter((c) => c.device === deviceName)
       : credentials;
-    
+
     const result = await BiometricAuth.authenticate({
       reason: `Sign in${deviceName ? ` with ${deviceName}` : ''}`,
       webOptions: {
-        allowCredentials: allowList.map(c => c.id)
-      }
+        allowCredentials: allowList.map((c) => c.id),
+      },
     });
-    
+
     return result;
   }
-  
+
   async listRegisteredDevices() {
     const credentials = await this.getStoredCredentials();
-    return credentials.map(c => ({
+    return credentials.map((c) => ({
       name: c.device,
       id: c.id,
-      registered: c.timestamp
+      registered: c.timestamp,
     }));
   }
 }
@@ -454,10 +456,10 @@ await BiometricAuth.configure({
   webConfig: {
     // Request attestation from authenticator
     attestation: 'direct',
-    
+
     // Verify authenticator certificates
     // (Requires server-side verification)
-  }
+  },
 });
 
 // Server-side verification needed for:
@@ -471,12 +473,14 @@ await BiometricAuth.configure({
 ### Local Development
 
 1. **Using localhost**:
+
 ```bash
 # Serves on https://localhost:3000
 npm run dev -- --https
 ```
 
 2. **Using ngrok for mobile testing**:
+
 ```bash
 # Expose local server
 ngrok http 3000
@@ -487,6 +491,7 @@ ngrok http 3000
 ### Browser DevTools
 
 Chrome DevTools WebAuthn tab:
+
 1. Open DevTools (F12)
 2. Go to "WebAuthn" tab
 3. Enable virtual authenticator
@@ -499,29 +504,29 @@ Chrome DevTools WebAuthn tab:
 // Test different scenarios
 async function runWebAuthnTests() {
   // Test 1: Platform authenticator available
-  const hasPlatform = await PublicKeyCredential
-    .isUserVerifyingPlatformAuthenticatorAvailable();
-  console.log('Platform auth:', hasPlatform);
-  
+  const hasPlatform =
+    await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  consoleLog('Platform auth:', hasPlatform);
+
   // Test 2: User verification levels
   for (const level of ['required', 'preferred', 'discouraged']) {
     await BiometricAuth.configure({
-      webConfig: { userVerification: level }
+      webConfig: { userVerification: level },
     });
-    
+
     try {
       await BiometricAuth.authenticate();
-      console.log(`${level} verification: SUCCESS`);
+      consoleLog(`${level} verification: SUCCESS`);
     } catch (e) {
-      console.log(`${level} verification: FAILED`);
+      consoleLog(`${level} verification: FAILED`);
     }
   }
-  
+
   // Test 3: Timeout behavior
   await BiometricAuth.configure({
-    webConfig: { timeout: 5000 } // 5 seconds
+    webConfig: { timeout: 5000 }, // 5 seconds
   });
-  
+
   // Test 4: Multiple credentials
   // Register multiple times and test selection
 }
@@ -539,7 +544,7 @@ if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
     // Must be called directly in event handler
     await BiometricAuth.authenticate();
   });
-  
+
   // Cannot call authenticate() in async callback
   // This will fail in Safari:
   setTimeout(async () => {
@@ -555,11 +560,11 @@ if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
 if (navigator.userAgent.includes('Firefox')) {
   // Firefox may not support platform authenticators
   // on some systems. Always check:
-  const available = await PublicKeyCredential
-    .isUserVerifyingPlatformAuthenticatorAvailable();
-    
+  const available =
+    await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+
   if (!available) {
-    console.log('Firefox: USB security key required');
+    consoleLog('Firefox: USB security key required');
   }
 }
 ```
@@ -572,22 +577,22 @@ if (navigator.userAgent.includes('Firefox')) {
 class CredentialCache {
   private cache: Map<string, any> = new Map();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-  
+
   async getCredential(id: string) {
     const cached = this.cache.get(id);
-    
+
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
       return cached.credential;
     }
-    
+
     // Fetch fresh credential
     const credential = await this.fetchCredential(id);
-    
+
     this.cache.set(id, {
       credential,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return credential;
   }
 }
@@ -598,20 +603,16 @@ class CredentialCache {
 ```typescript
 // Check multiple things in parallel
 async function initializeBiometric() {
-  const [
-    isAvailable,
-    hasPlatformAuth,
-    storedCredentials
-  ] = await Promise.all([
+  const [isAvailable, hasPlatformAuth, storedCredentials] = await Promise.all([
     BiometricAuth.isAvailable(),
     PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
-    loadStoredCredentials()
+    loadStoredCredentials(),
   ]);
-  
+
   return {
     isAvailable: isAvailable.isAvailable,
     hasPlatformAuth,
-    hasStoredCredentials: storedCredentials.length > 0
+    hasStoredCredentials: storedCredentials.length > 0,
   };
 }
 ```
@@ -625,7 +626,7 @@ await BiometricAuth.configure({
   enableLogging: true,
   webConfig: {
     // Your config
-  }
+  },
 });
 
 // View in browser console
@@ -657,14 +658,14 @@ class WebAuthnDebugger {
       platformAuthAvailable: false,
       secureContext: window.isSecureContext,
       origin: window.location.origin,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
-    
+
     if (report.webAuthnSupported) {
-      report.platformAuthAvailable = await PublicKeyCredential
-        .isUserVerifyingPlatformAuthenticatorAvailable();
+      report.platformAuthAvailable =
+        await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     }
-    
+
     console.table(report);
     return report;
   }

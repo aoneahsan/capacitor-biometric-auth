@@ -35,6 +35,7 @@ npx cap sync
 ```
 
 This command will:
+
 - Copy the web assets to native projects
 - Update native project dependencies
 - Install the plugin's native code
@@ -44,8 +45,9 @@ This command will:
 ### Android Setup
 
 1. **Minimum SDK Version**
-   
+
    Ensure your `android/variables.gradle` file has:
+
    ```gradle
    ext {
        minSdkVersion = 23  // Required minimum
@@ -55,35 +57,38 @@ This command will:
    ```
 
 2. **Permissions**
-   
+
    The plugin automatically adds the required permission to your `AndroidManifest.xml`:
+
    ```xml
    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
    ```
 
 3. **ProGuard Rules** (if using R8/ProGuard)
-   
+
    The plugin includes ProGuard rules automatically. No additional configuration needed.
 
 ### iOS Setup
 
 1. **Minimum iOS Version**
-   
+
    In your `ios/App/Podfile`, ensure:
+
    ```ruby
    platform :ios, '13.0'
    ```
 
 2. **Info.plist Configuration**
-   
+
    Add Face ID usage description to `ios/App/App/Info.plist`:
+
    ```xml
    <key>NSFaceIDUsageDescription</key>
    <string>This app uses Face ID for secure authentication</string>
    ```
 
 3. **Capabilities**
-   
+
    No additional capabilities need to be enabled. The plugin uses LocalAuthentication framework which doesn't require special entitlements.
 
 ### Web Setup
@@ -105,15 +110,16 @@ import { BiometricAuth } from 'capacitor-biometric-authentication';
 async function checkBiometric() {
   try {
     const { isAvailable, reason } = await BiometricAuth.isAvailable();
-    
+
     if (isAvailable) {
-      console.log('Biometric authentication is available');
-      
+      consoleLog('Biometric authentication is available');
+
       // Get supported biometric types
-      const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
-      console.log('Supported types:', supportedBiometrics);
+      const { supportedBiometrics } =
+        await BiometricAuth.getSupportedBiometrics();
+      consoleLog('Supported types:', supportedBiometrics);
     } else {
-      console.log('Biometric not available:', reason);
+      consoleLog('Biometric not available:', reason);
     }
   } catch (error) {
     console.error('Error checking biometric availability:', error);
@@ -126,11 +132,11 @@ async function authenticate() {
     const result = await BiometricAuth.authenticate({
       reason: 'Please authenticate to access your account',
       fallbackButtonTitle: 'Use Passcode',
-      maxAttempts: 3
+      maxAttempts: 3,
     });
-    
+
     if (result.isAuthenticated) {
-      console.log('Authentication successful');
+      consoleLog('Authentication successful');
       // User is authenticated
     }
   } catch (error) {
@@ -144,12 +150,12 @@ async function authenticate() {
 The plugin is written in TypeScript and provides full type definitions. Import types as needed:
 
 ```typescript
-import { 
+import {
   BiometricAuth,
   BiometricAuthOptions,
   BiometricAuthResult,
   BiometricType,
-  BiometricErrorCode 
+  BiometricErrorCode,
 } from 'capacitor-biometric-authentication';
 ```
 
@@ -191,6 +197,7 @@ To verify the installation:
 ### Getting Help
 
 If you encounter issues:
+
 1. Check the [Error Handling Guide](../error-handling/overview.md)
 2. Search existing [GitHub Issues](https://github.com/aoneahsan/capacitor-biometric-authentication/issues)
 3. Create a new issue with:

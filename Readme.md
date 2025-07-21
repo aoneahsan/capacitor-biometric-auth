@@ -42,9 +42,9 @@ import { BiometricAuth } from 'capacitor-biometric-authentication';
 const checkBiometric = async () => {
   const { isAvailable, reason } = await BiometricAuth.isAvailable();
   if (isAvailable) {
-    console.log('Biometric authentication is available');
+    consoleLog('Biometric authentication is available');
   } else {
-    console.log('Not available:', reason);
+    consoleLog('Not available:', reason);
   }
 };
 
@@ -58,7 +58,7 @@ const authenticate = async () => {
     });
 
     if (result.isAuthenticated) {
-      console.log('Authentication successful!');
+      consoleLog('Authentication successful!');
     }
   } catch (error) {
     console.error('Authentication failed:', error);
@@ -104,13 +104,14 @@ For detailed configuration options and examples, see the [Configuration Guide](.
 
 ## Platform Support
 
-| Platform | Minimum Version | Biometric Types |
-|----------|----------------|-----------------|
-| Android | 6.0 (API 23) | Fingerprint, Face, Iris |
-| iOS | 13.0 | Touch ID, Face ID |
-| Web | Modern browsers | Platform authenticators |
+| Platform | Minimum Version | Biometric Types         |
+| -------- | --------------- | ----------------------- |
+| Android  | 6.0 (API 23)    | Fingerprint, Face, Iris |
+| iOS      | 13.0            | Touch ID, Face ID       |
+| Web      | Modern browsers | Platform authenticators |
 
 For detailed platform-specific information:
+
 - [Android Guide](./docs/platform-guides/android.md)
 - [iOS Guide](./docs/platform-guides/ios.md)
 - [Web Guide](./docs/platform-guides/web.md)
@@ -120,6 +121,7 @@ For detailed platform-specific information:
 The plugin provides comprehensive error handling with specific error codes. See the [Error Handling Guide](./docs/error-handling/overview.md) for details.
 
 Common error codes:
+
 - `USER_CANCELLED` - User cancelled authentication
 - `AUTHENTICATION_FAILED` - Biometric not recognized
 - `LOCKOUT` - Too many failed attempts

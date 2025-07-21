@@ -17,24 +17,24 @@ Always check if biometric authentication is available before using it:
 ```typescript
 async function setupBiometric() {
   const { isAvailable, reason } = await BiometricAuth.isAvailable();
-  
+
   if (!isAvailable) {
     // Handle unavailability
     switch (reason) {
       case 'NO_HARDWARE':
-        console.log('Device does not have biometric hardware');
+        consoleLog('Device does not have biometric hardware');
         break;
       case 'NO_ENROLLED_BIOMETRICS':
-        console.log('No biometrics enrolled');
+        consoleLog('No biometrics enrolled');
         // Prompt user to enroll biometrics in device settings
         break;
       case 'BIOMETRIC_UNAVAILABLE':
-        console.log('Biometric temporarily unavailable');
+        consoleLog('Biometric temporarily unavailable');
         break;
     }
     return false;
   }
-  
+
   return true;
 }
 ```
@@ -47,12 +47,12 @@ Simple authentication with minimal configuration:
 async function loginWithBiometric() {
   try {
     const result = await BiometricAuth.authenticate({
-      reason: 'Log in to your account'
+      reason: 'Log in to your account',
     });
-    
+
     if (result.isAuthenticated) {
       // Success! Proceed with login
-      console.log('Authentication successful');
+      consoleLog('Authentication successful');
       // Navigate to protected area
     }
   } catch (error) {
@@ -74,16 +74,16 @@ function LoginScreen() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState<BiometricType[]>([]);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  
+
   useEffect(() => {
     checkBiometricAvailability();
   }, []);
-  
+
   async function checkBiometricAvailability() {
     try {
       const { isAvailable } = await BiometricAuth.isAvailable();
       setBiometricAvailable(isAvailable);
-      
+
       if (isAvailable) {
         const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
         setBiometricType(supportedBiometrics);
@@ -92,10 +92,10 @@ function LoginScreen() {
       console.error('Error checking biometric:', error);
     }
   }
-  
+
   async function handleBiometricLogin() {
     setIsAuthenticating(true);
-    
+
     try {
       const result = await BiometricAuth.authenticate({
         reason: 'Log in to MyApp',
@@ -103,16 +103,16 @@ function LoginScreen() {
         cancelButtonTitle: 'Cancel',
         maxAttempts: 3
       });
-      
+
       if (result.isAuthenticated) {
         // Authentication successful
-        console.log('Login successful');
-        
+        consoleLog('Login successful');
+
         // Optional: Store credential for future use
         if (result.credentialId) {
           await saveCredentialId(result.credentialId);
         }
-        
+
         // Navigate to home screen
         navigateToHome();
       }
@@ -120,14 +120,14 @@ function LoginScreen() {
       // Handle specific error codes
       switch (error.code) {
         case BiometricErrorCode.USER_CANCELLED:
-          console.log('User cancelled authentication');
+          consoleLog('User cancelled authentication');
           break;
         case BiometricErrorCode.LOCKOUT:
           console.error('Too many failed attempts');
           showError('Biometric locked. Please try again later.');
           break;
         case BiometricErrorCode.USER_FALLBACK:
-          console.log('User chose fallback');
+          consoleLog('User chose fallback');
           showPasswordLogin();
           break;
         default:
@@ -138,33 +138,33 @@ function LoginScreen() {
       setIsAuthenticating(false);
     }
   }
-  
+
   function getBiometricIcon() {
     if (biometricType.includes(BiometricType.FACE_ID)) {
       return '👤'; // Face ID icon
-    } else if (biometricType.includes(BiometricType.TOUCH_ID) || 
+    } else if (biometricType.includes(BiometricType.TOUCH_ID) ||
                biometricType.includes(BiometricType.FINGERPRINT)) {
       return '👆'; // Fingerprint icon
     }
     return '🔒'; // Generic biometric icon
   }
-  
+
   return (
     <div className="login-screen">
       <h1>Welcome Back</h1>
-      
+
       {/* Regular login form */}
       <form onSubmit={handlePasswordLogin}>
         <input type="email" placeholder="Email" />
         <input type="password" placeholder="Password" />
         <button type="submit">Log In</button>
       </form>
-      
+
       {/* Biometric login option */}
       {biometricAvailable && (
         <div className="biometric-section">
           <div className="divider">OR</div>
-          <button 
+          <button
             onClick={handleBiometricLogin}
             disabled={isAuthenticating}
             className="biometric-button"
@@ -189,26 +189,26 @@ import { BiometricAuth } from 'capacitor-biometric-authentication';
 class AuthService {
   private sessionDuration = 30 * 60 * 1000; // 30 minutes
   private lastAuthTime: number | null = null;
-  
+
   async authenticateIfNeeded(): Promise<boolean> {
     // Check if session is still valid
     if (this.isSessionValid()) {
       return true;
     }
-    
+
     try {
       // Configure session duration
       await BiometricAuth.configure({
         sessionDuration: this.sessionDuration,
-        enableLogging: true
+        enableLogging: true,
       });
-      
+
       // Authenticate
       const result = await BiometricAuth.authenticate({
         reason: 'Your session has expired. Please authenticate to continue.',
-        disableBackup: true // Force biometric only
+        disableBackup: true, // Force biometric only
       });
-      
+
       if (result.isAuthenticated) {
         this.lastAuthTime = Date.now();
         return true;
@@ -216,15 +216,15 @@ class AuthService {
     } catch (error) {
       console.error('Re-authentication failed:', error);
     }
-    
+
     return false;
   }
-  
+
   private isSessionValid(): boolean {
     if (!this.lastAuthTime) return false;
     return Date.now() - this.lastAuthTime < this.sessionDuration;
   }
-  
+
   logout() {
     this.lastAuthTime = null;
     // Optional: Clear stored credentials
@@ -237,12 +237,12 @@ const authService = new AuthService();
 
 async function accessProtectedResource() {
   const isAuthenticated = await authService.authenticateIfNeeded();
-  
+
   if (!isAuthenticated) {
     // Redirect to login
     return;
   }
-  
+
   // Access granted - proceed with protected operation
   fetchUserData();
 }
@@ -258,8 +258,8 @@ async function setupiOSBiometric() {
     reason: 'Unlock MyApp',
     iosOptions: {
       localizedFallbackTitle: 'Enter Passcode',
-      biometryType: 'faceID' // or 'touchID'
-    }
+      biometryType: 'faceID', // or 'touchID'
+    },
   });
 }
 ```
@@ -275,10 +275,10 @@ async function setupAndroidBiometric() {
         title: 'Biometric Login',
         subtitle: 'Log in using your biometric credential',
         description: 'Place your finger on the sensor',
-        negativeButtonText: 'Use Account Password'
+        negativeButtonText: 'Use Account Password',
       },
-      encryptionRequired: true
-    }
+      encryptionRequired: true,
+    },
   });
 }
 ```
@@ -293,12 +293,12 @@ async function setupWebBiometric() {
       rpId: 'myapp.com',
       rpName: 'MyApp',
       userVerification: 'preferred',
-      timeout: 60000 // 60 seconds
-    }
+      timeout: 60000, // 60 seconds
+    },
   });
-  
+
   const result = await BiometricAuth.authenticate({
-    reason: 'Authenticate to continue'
+    reason: 'Authenticate to continue',
   });
 }
 ```
@@ -306,6 +306,7 @@ async function setupWebBiometric() {
 ## Best Practices
 
 1. **Always Check Availability First**
+
    ```typescript
    const { isAvailable } = await BiometricAuth.isAvailable();
    if (!isAvailable) {
@@ -314,14 +315,16 @@ async function setupWebBiometric() {
    ```
 
 2. **Provide Clear Reasons**
+
    ```typescript
    await BiometricAuth.authenticate({
-     reason: 'Authenticate to view your account balance'
+     reason: 'Authenticate to view your account balance',
      // Be specific about why authentication is needed
    });
    ```
 
 3. **Handle All Error Cases**
+
    ```typescript
    try {
      await BiometricAuth.authenticate(options);
@@ -332,11 +335,12 @@ async function setupWebBiometric() {
    ```
 
 4. **Offer Fallback Options**
+
    ```typescript
    await BiometricAuth.authenticate({
      reason: 'Log in to MyApp',
      fallbackButtonTitle: 'Use Password',
-     disableBackup: false // Allow fallback methods
+     disableBackup: false, // Allow fallback methods
    });
    ```
 

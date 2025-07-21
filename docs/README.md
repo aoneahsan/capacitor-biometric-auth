@@ -5,32 +5,39 @@ Welcome to the comprehensive documentation for the `capacitor-biometric-authenti
 ## 📚 Documentation Structure
 
 ### 🚀 Getting Started
+
 - **[Installation Guide](./getting-started/installation.md)** - Step-by-step installation and setup
 - **[Quick Start Guide](./getting-started/quick-start.md)** - Get up and running in 5 minutes
 
 ### 📖 API Reference
+
 - **[Methods Reference](./api-reference/methods.md)** - Detailed documentation of all available methods
 - **[Type Definitions](./api-reference/types.md)** - Complete TypeScript type definitions
 
 ### 📱 Platform Guides
+
 - **[Android Guide](./platform-guides/android.md)** - Android-specific features and setup
 - **[iOS Guide](./platform-guides/ios.md)** - iOS-specific features and setup
 - **[Web Guide](./platform-guides/web.md)** - WebAuthn implementation details
 
 ### ⚙️ Configuration
+
 - **[Configuration Options](./configuration/options.md)** - All available configuration settings
 - **[UI Customization](./configuration/customization.md)** - Customize authentication dialogs
 
 ### 🚨 Error Handling
+
 - **[Error Handling Overview](./error-handling/overview.md)** - Understanding and handling errors
 - **[Troubleshooting Guide](./error-handling/troubleshooting.md)** - Common issues and solutions
 
 ### 🔧 Advanced Usage
+
 - **[Security Best Practices](./advanced-usage/security.md)** - Security guidelines and recommendations
 - **[Session Management](./advanced-usage/session-management.md)** - Advanced session handling
 - **[Integration Examples](./advanced-usage/integration-examples.md)** - Framework and authentication system integrations
 
 ### 🔄 Migration & Support
+
 - **[Migration Guide](./migration/from-other-plugins.md)** - Migrate from other biometric plugins
 - **[FAQ](./migration/faq.md)** - Frequently asked questions
 
@@ -39,6 +46,7 @@ Welcome to the comprehensive documentation for the `capacitor-biometric-authenti
 ### By Use Case
 
 **I want to...**
+
 - [Add biometric login to my app](./getting-started/quick-start.md#basic-implementation)
 - [Check if biometric is available](./api-reference/methods.md#isavailable)
 - [Customize the authentication dialog](./configuration/customization.md)
@@ -49,6 +57,7 @@ Welcome to the comprehensive documentation for the `capacitor-biometric-authenti
 ### By Platform
 
 **Platform-specific information:**
+
 - [Android setup and features](./platform-guides/android.md)
 - [iOS setup and features](./platform-guides/ios.md)
 - [Web/WebAuthn setup](./platform-guides/web.md)
@@ -56,6 +65,7 @@ Welcome to the comprehensive documentation for the `capacitor-biometric-authenti
 ### By Framework
 
 **Integration guides:**
+
 - [React/React Native](./advanced-usage/integration-examples.md#react-integration)
 - [Vue 3](./advanced-usage/integration-examples.md#vue-3-integration)
 - [Angular](./advanced-usage/integration-examples.md#angular-integration)
@@ -63,6 +73,7 @@ Welcome to the comprehensive documentation for the `capacitor-biometric-authenti
 ## 📋 Feature Overview
 
 ### Core Features
+
 - ✅ **Cross-platform support** - iOS, Android, and Web
 - ✅ **Multiple biometric types** - Fingerprint, Face ID, Touch ID, Face, Iris
 - ✅ **WebAuthn support** - Modern web biometric authentication
@@ -73,6 +84,7 @@ Welcome to the comprehensive documentation for the `capacitor-biometric-authenti
 - ✅ **Comprehensive error handling** - Detailed error codes and messages
 
 ### Security Features
+
 - 🔒 **No biometric data storage** - Biometric matching happens in secure hardware
 - 🔒 **Hardware-backed keys** - Android Keystore, iOS Keychain, WebAuthn
 - 🔒 **Session encryption** - Encrypted session management
@@ -81,6 +93,7 @@ Welcome to the comprehensive documentation for the `capacitor-biometric-authenti
 ## 🏁 Getting Started
 
 ### Prerequisites
+
 - Capacitor 6.0+
 - iOS 13.0+ / Android 6.0+ (API 23+)
 - Node.js 18+
@@ -103,11 +116,11 @@ const { isAvailable } = await BiometricAuth.isAvailable();
 if (isAvailable) {
   // Authenticate
   const result = await BiometricAuth.authenticate({
-    reason: 'Please authenticate to continue'
+    reason: 'Please authenticate to continue',
   });
-  
+
   if (result.isAuthenticated) {
-    console.log('Authentication successful!');
+    consoleLog('Authentication successful!');
   }
 }
 ```
@@ -116,16 +129,16 @@ For detailed setup instructions, see the [Installation Guide](./getting-started/
 
 ## 📊 Platform Compatibility
 
-| Feature | iOS | Android | Web |
-|---------|-----|---------|-----|
-| Fingerprint | ✅ Touch ID | ✅ | ✅* |
-| Face Recognition | ✅ Face ID | ✅ | ✅* |
-| Iris Recognition | ❌ | ✅ | ❌ |
-| Session Management | ✅ | ✅ | ✅ |
-| UI Customization | Limited | ✅ Full | Limited |
-| Hardware Security | ✅ Secure Enclave | ✅ Keystore | ✅ Platform |
+| Feature            | iOS               | Android     | Web         |
+| ------------------ | ----------------- | ----------- | ----------- |
+| Fingerprint        | ✅ Touch ID       | ✅          | ✅\*        |
+| Face Recognition   | ✅ Face ID        | ✅          | ✅\*        |
+| Iris Recognition   | ❌                | ✅          | ❌          |
+| Session Management | ✅                | ✅          | ✅          |
+| UI Customization   | Limited           | ✅ Full     | Limited     |
+| Hardware Security  | ✅ Secure Enclave | ✅ Keystore | ✅ Platform |
 
-*Web biometric type depends on platform authenticator
+\*Web biometric type depends on platform authenticator
 
 ## 🤝 Contributing
 

@@ -30,7 +30,7 @@ interface BiometricAvailabilityResult {
    * Whether biometric authentication is available
    */
   isAvailable: boolean;
-  
+
   /**
    * Reason why biometric is unavailable (only present if isAvailable is false)
    */
@@ -61,12 +61,12 @@ interface BiometricAuthResult {
    * Whether authentication was successful
    */
   isAuthenticated: boolean;
-  
+
   /**
    * Credential ID for WebAuthn (Web platform only)
    */
   credentialId?: string;
-  
+
   /**
    * The type of biometric used for authentication
    */
@@ -87,42 +87,42 @@ interface BiometricAuthOptions {
    * Displayed to the user in the authentication dialog
    */
   reason?: string;
-  
+
   /**
    * Custom text for the fallback button
    * Default varies by platform
    */
   fallbackButtonTitle?: string;
-  
+
   /**
    * Custom text for the cancel button
    * Default: "Cancel"
    */
   cancelButtonTitle?: string;
-  
+
   /**
    * Whether to disable backup authentication methods
    * (PIN, pattern, password)
    * Default: false
    */
   disableBackup?: boolean;
-  
+
   /**
    * Maximum number of authentication attempts allowed
    * Default: 3
    */
   maxAttempts?: number;
-  
+
   /**
    * iOS-specific authentication options
    */
   iosOptions?: IOSBiometricAuthOptions;
-  
+
   /**
    * Android-specific authentication options
    */
   androidOptions?: AndroidBiometricAuthOptions;
-  
+
   /**
    * Web-specific authentication options
    */
@@ -141,7 +141,7 @@ interface IOSBiometricAuthOptions {
    * iOS only - overrides fallbackButtonTitle
    */
   localizedFallbackTitle?: string;
-  
+
   /**
    * Specific biometry type to use
    * If not specified, uses device default
@@ -163,30 +163,30 @@ interface AndroidBiometricAuthOptions {
      * Default: "Biometric Authentication"
      */
     title?: string;
-    
+
     /**
      * Subtitle of the authentication dialog
      */
     subtitle?: string;
-    
+
     /**
      * Description text in the dialog
      */
     description?: string;
-    
+
     /**
      * Text for the negative button
      * Default: "Cancel"
      */
     negativeButtonText?: string;
   };
-  
+
   /**
    * Whether encryption is required
    * Default: true
    */
   encryptionRequired?: boolean;
-  
+
   /**
    * Whether explicit user confirmation is required
    * after biometric authentication
@@ -205,7 +205,7 @@ interface WebBiometricAuthOptions {
    * If not provided, a random challenge is generated
    */
   challenge?: string;
-  
+
   /**
    * List of credential IDs that can be used
    * If not provided, any stored credential can be used
@@ -225,54 +225,54 @@ interface BiometricAuthConfig {
    * Default: 1800000 (30 minutes)
    */
   sessionDuration?: number;
-  
+
   /**
    * Custom key for session storage
    * Default: "biometric_session"
    */
   sessionKey?: string;
-  
+
   /**
    * Custom encryption key for credential storage
    * If not provided, a default key is used
    */
   encryptionKey?: string;
-  
+
   /**
    * Prefix for storage keys
    * Useful for multi-account scenarios
    * Default: "biometric_"
    */
   storagePrefix?: string;
-  
+
   /**
    * Whether to allow device credential as fallback
    * Default: true
    */
   allowDeviceCredential?: boolean;
-  
+
   /**
    * Whether confirmation is required after authentication
    * Default: false
    */
   confirmationRequired?: boolean;
-  
+
   /**
    * Enable debug logging
    * Default: false
    */
   enableLogging?: boolean;
-  
+
   /**
    * Android-specific configuration
    */
   androidConfig?: AndroidConfig;
-  
+
   /**
    * iOS-specific configuration
    */
   iosConfig?: IOSConfig;
-  
+
   /**
    * Web-specific configuration
    */
@@ -291,19 +291,19 @@ interface AndroidConfig {
    * Default: "BiometricAuthKey"
    */
   keystoreAlias?: string;
-  
+
   /**
    * Whether user authentication is required to use the key
    * Default: true
    */
   userAuthenticationRequired?: boolean;
-  
+
   /**
    * Whether the key is invalidated when biometrics are enrolled
    * Default: true
    */
   invalidatedByBiometricEnrollment?: boolean;
-  
+
   /**
    * Whether to use StrongBox-backed keys if available
    * Default: false
@@ -321,7 +321,7 @@ interface IOSConfig {
    * between app extensions
    */
   accessGroup?: string;
-  
+
   /**
    * Duration in seconds for which Touch ID authentication
    * can be reused
@@ -340,25 +340,25 @@ interface WebConfig {
    * Default: current domain
    */
   rpId?: string;
-  
+
   /**
    * Relying Party name shown to users
    * Default: "Biometric Authentication"
    */
   rpName?: string;
-  
+
   /**
    * User verification requirement level
    * Default: "preferred"
    */
   userVerification?: 'required' | 'preferred' | 'discouraged';
-  
+
   /**
    * Timeout for authentication in milliseconds
    * Default: 60000 (1 minute)
    */
   timeout?: number;
-  
+
   /**
    * Attestation conveyance preference
    * Default: "none"
@@ -379,31 +379,31 @@ enum BiometricType {
    * Touch ID (iOS)
    */
   TOUCH_ID = 'TOUCH_ID',
-  
+
   /**
    * Face ID (iOS)
    */
   FACE_ID = 'FACE_ID',
-  
+
   /**
    * Fingerprint (Android)
    */
   FINGERPRINT = 'FINGERPRINT',
-  
+
   /**
    * Face recognition (Android)
    */
   FACE = 'FACE',
-  
+
   /**
    * Iris recognition (Android)
    */
   IRIS = 'IRIS',
-  
+
   /**
    * Device credential (PIN/Pattern/Password)
    */
-  DEVICE_CREDENTIAL = 'DEVICE_CREDENTIAL'
+  DEVICE_CREDENTIAL = 'DEVICE_CREDENTIAL',
 }
 ```
 
@@ -417,17 +417,17 @@ enum BiometricUnavailableReason {
    * Device doesn't have biometric hardware
    */
   NO_HARDWARE = 'NO_HARDWARE',
-  
+
   /**
    * No biometrics are enrolled on the device
    */
   NO_ENROLLED_BIOMETRICS = 'NO_ENROLLED_BIOMETRICS',
-  
+
   /**
    * Biometric is temporarily unavailable
    * (e.g., too many failed attempts)
    */
-  BIOMETRIC_UNAVAILABLE = 'BIOMETRIC_UNAVAILABLE'
+  BIOMETRIC_UNAVAILABLE = 'BIOMETRIC_UNAVAILABLE',
 }
 ```
 
@@ -441,52 +441,52 @@ enum BiometricErrorCode {
    * User cancelled the authentication dialog
    */
   USER_CANCELLED = 'USER_CANCELLED',
-  
+
   /**
    * Authentication failed (biometric not recognized)
    */
   AUTHENTICATION_FAILED = 'AUTHENTICATION_FAILED',
-  
+
   /**
    * Too many failed attempts, temporary lockout
    */
   LOCKOUT = 'LOCKOUT',
-  
+
   /**
    * Too many failed attempts, permanent lockout
    */
   LOCKOUT_PERMANENT = 'LOCKOUT_PERMANENT',
-  
+
   /**
    * User pressed the fallback button
    */
   USER_FALLBACK = 'USER_FALLBACK',
-  
+
   /**
    * System cancelled authentication
    * (e.g., app went to background)
    */
   SYSTEM_CANCELLED = 'SYSTEM_CANCELLED',
-  
+
   /**
    * Biometric authentication not available
    */
   NOT_AVAILABLE = 'NOT_AVAILABLE',
-  
+
   /**
    * Permission denied by user or system
    */
   PERMISSION_DENIED = 'PERMISSION_DENIED',
-  
+
   /**
    * No biometrics enrolled on device
    */
   BIOMETRIC_NOT_ENROLLED = 'BIOMETRIC_NOT_ENROLLED',
-  
+
   /**
    * Unknown error occurred
    */
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR'
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
 ```
 
@@ -502,12 +502,12 @@ interface BiometricError extends Error {
    * Error code from BiometricErrorCode enum
    */
   code: BiometricErrorCode;
-  
+
   /**
    * Human-readable error message
    */
   message: string;
-  
+
   /**
    * Additional error details (platform-specific)
    */
@@ -520,24 +520,24 @@ interface BiometricError extends Error {
 ### Type-Safe Error Handling
 
 ```typescript
-import { 
-  BiometricAuth, 
-  BiometricError, 
-  BiometricErrorCode 
+import {
+  BiometricAuth,
+  BiometricError,
+  BiometricErrorCode,
 } from 'capacitor-biometric-authentication';
 
 try {
   const result = await BiometricAuth.authenticate({
-    reason: 'Authenticate to continue'
+    reason: 'Authenticate to continue',
   });
 } catch (error: unknown) {
   if (isBiometricError(error)) {
     switch (error.code) {
       case BiometricErrorCode.USER_CANCELLED:
-        console.log('User cancelled');
+        consoleLog('User cancelled');
         break;
       case BiometricErrorCode.LOCKOUT:
-        console.log('Too many attempts');
+        consoleLog('Too many attempts');
         break;
       // Handle other cases...
     }
@@ -553,34 +553,37 @@ function isBiometricError(error: unknown): error is BiometricError {
 
 ```typescript
 import { Capacitor } from '@capacitor/core';
-import { BiometricAuth, BiometricAuthOptions } from 'capacitor-biometric-authentication';
+import {
+  BiometricAuth,
+  BiometricAuthOptions,
+} from 'capacitor-biometric-authentication';
 
 async function authenticateWithPlatformOptions() {
   const options: BiometricAuthOptions = {
-    reason: 'Please authenticate'
+    reason: 'Please authenticate',
   };
-  
+
   // Add platform-specific options
   if (Capacitor.getPlatform() === 'ios') {
     options.iosOptions = {
       localizedFallbackTitle: 'Use Passcode',
-      biometryType: 'faceID'
+      biometryType: 'faceID',
     };
   } else if (Capacitor.getPlatform() === 'android') {
     options.androidOptions = {
       promptInfo: {
         title: 'Biometric Login',
         subtitle: 'Log in to MyApp',
-        negativeButtonText: 'Use Password'
+        negativeButtonText: 'Use Password',
       },
-      encryptionRequired: true
+      encryptionRequired: true,
     };
   } else if (Capacitor.getPlatform() === 'web') {
     options.webOptions = {
-      challenge: generateChallenge()
+      challenge: generateChallenge(),
     };
   }
-  
+
   const result = await BiometricAuth.authenticate(options);
 }
 ```

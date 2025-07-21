@@ -13,12 +13,12 @@ This guide covers iOS-specific implementation details, requirements, and best pr
 
 ### Supported Biometric Types
 
-| Device | Biometric Type | iOS Version |
-|--------|----------------|-------------|
-| iPhone 5S - iPhone 8 | Touch ID | iOS 8.0+ |
-| iPhone X and later | Face ID | iOS 11.0+ |
-| iPad Air 2 and later | Touch ID | iOS 8.0+ |
-| iPad Pro 2018 and later | Face ID | iOS 12.0+ |
+| Device                  | Biometric Type | iOS Version |
+| ----------------------- | -------------- | ----------- |
+| iPhone 5S - iPhone 8    | Touch ID       | iOS 8.0+    |
+| iPhone X and later      | Face ID        | iOS 11.0+   |
+| iPad Air 2 and later    | Touch ID       | iOS 8.0+    |
+| iPad Pro 2018 and later | Face ID        | iOS 12.0+   |
 
 ## Setup and Configuration
 
@@ -46,6 +46,7 @@ cd ios && pod install
 ```
 
 If you encounter issues:
+
 ```bash
 cd ios
 pod repo update
@@ -71,9 +72,9 @@ Detect whether the device uses Touch ID or Face ID:
 const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
 
 if (supportedBiometrics.includes(BiometricType.FACE_ID)) {
-  console.log('Device uses Face ID');
+  consoleLog('Device uses Face ID');
 } else if (supportedBiometrics.includes(BiometricType.TOUCH_ID)) {
-  console.log('Device uses Touch ID');
+  consoleLog('Device uses Touch ID');
 }
 ```
 
@@ -86,8 +87,8 @@ const result = await BiometricAuth.authenticate({
   reason: 'Unlock your account',
   iosOptions: {
     localizedFallbackTitle: 'Enter Passcode',
-    biometryType: 'faceID' // or 'touchID'
-  }
+    biometryType: 'faceID', // or 'touchID'
+  },
 });
 ```
 
@@ -101,8 +102,8 @@ The plugin uses iOS Keychain for secure credential storage:
 await BiometricAuth.configure({
   iosConfig: {
     accessGroup: 'group.com.yourcompany.yourapp', // For app extensions
-    touchIDAuthenticationAllowableReuseDuration: 10 // Seconds
-  }
+    touchIDAuthenticationAllowableReuseDuration: 10, // Seconds
+  },
 });
 ```
 
@@ -114,8 +115,8 @@ Share credentials between your app and extensions:
 // Configure shared keychain access
 await BiometricAuth.configure({
   iosConfig: {
-    accessGroup: 'group.com.yourcompany.sharedkeychain'
-  }
+    accessGroup: 'group.com.yourcompany.sharedkeychain',
+  },
 });
 ```
 
@@ -138,7 +139,7 @@ Customize UI based on biometric type:
 ```typescript
 async function setupBiometricUI() {
   const { supportedBiometrics } = await BiometricAuth.getSupportedBiometrics();
-  
+
   if (supportedBiometrics.includes(BiometricType.FACE_ID)) {
     // Face ID specific UI
     setBiometricIcon('face-id-icon.png');
@@ -159,8 +160,8 @@ Configure Touch ID authentication reuse:
 await BiometricAuth.configure({
   iosConfig: {
     // Allow Touch ID authentication to be reused for 30 seconds
-    touchIDAuthenticationAllowableReuseDuration: 30
-  }
+    touchIDAuthenticationAllowableReuseDuration: 30,
+  },
 });
 ```
 
@@ -177,44 +178,44 @@ try {
   switch (error.code) {
     case LAError.authenticationFailed:
       // Biometric didn't match
-      console.log('Authentication failed');
+      consoleLog('Authentication failed');
       break;
-      
+
     case LAError.userCancel:
       // User tapped Cancel
-      console.log('User cancelled');
+      consoleLog('User cancelled');
       break;
-      
+
     case LAError.userFallback:
       // User tapped fallback button
-      console.log('User selected fallback');
+      consoleLog('User selected fallback');
       showPasswordLogin();
       break;
-      
+
     case LAError.biometryNotAvailable:
       // Biometric temporarily unavailable
-      console.log('Biometry not available');
+      consoleLog('Biometry not available');
       break;
-      
+
     case LAError.biometryNotEnrolled:
       // No biometrics enrolled
       promptToEnrollBiometrics();
       break;
-      
+
     case LAError.biometryLockout:
       // Too many failed attempts
-      console.log('Biometry locked out');
+      consoleLog('Biometry locked out');
       showPasscodeOption();
       break;
-      
+
     case LAError.appCancel:
       // App cancelled authentication
-      console.log('App cancelled');
+      consoleLog('App cancelled');
       break;
-      
+
     case LAError.invalidContext:
       // LAContext was invalid
-      console.log('Invalid context');
+      consoleLog('Invalid context');
       break;
   }
 }
@@ -233,11 +234,11 @@ async function handleiOSLockout() {
       // Biometry is locked
       // User must unlock device with passcode
       showMessage('Too many failed attempts. Please use your passcode.');
-      
+
       // Offer passcode authentication
       await BiometricAuth.authenticate({
         disableBackup: false,
-        fallbackButtonTitle: 'Use Passcode'
+        fallbackButtonTitle: 'Use Passcode',
       });
     }
   }
@@ -253,7 +254,7 @@ Always check Face ID availability and permissions:
 ```typescript
 async function checkFaceIDPermission() {
   const { isAvailable, reason } = await BiometricAuth.isAvailable();
-  
+
   if (!isAvailable && reason === 'NO_ENROLLED_BIOMETRICS') {
     // Guide user to Settings
     showMessage('Please enroll Face ID in Settings > Face ID & Passcode');
@@ -271,7 +272,7 @@ App.addListener('appStateChange', async ({ isActive }) => {
   if (isActive && requiresAuthentication) {
     // Re-authenticate when app becomes active
     await BiometricAuth.authenticate({
-      reason: 'Please authenticate to continue'
+      reason: 'Please authenticate to continue',
     });
   }
 });
@@ -283,23 +284,23 @@ Provide localized strings for better user experience:
 
 ```typescript
 const localizedStrings = {
-  'en': {
+  en: {
     reason: 'Authenticate to access your account',
-    fallback: 'Use Passcode'
+    fallback: 'Use Passcode',
   },
-  'es': {
+  es: {
     reason: 'Autentícate para acceder a tu cuenta',
-    fallback: 'Usar código'
+    fallback: 'Usar código',
   },
-  'fr': {
+  fr: {
     reason: 'Authentifiez-vous pour accéder à votre compte',
-    fallback: 'Utiliser le code'
-  }
+    fallback: 'Utiliser le code',
+  },
 };
 
 await BiometricAuth.authenticate({
   reason: localizedStrings[currentLanguage].reason,
-  fallbackButtonTitle: localizedStrings[currentLanguage].fallback
+  fallbackButtonTitle: localizedStrings[currentLanguage].fallback,
 });
 ```
 
@@ -313,10 +314,10 @@ await BiometricAuth.authenticate({
 async function logout() {
   // Clear all biometric data
   await BiometricAuth.deleteCredentials();
-  
+
   // Clear session
   clearUserSession();
-  
+
   // Navigate to login
   navigateToLogin();
 }
@@ -375,6 +376,7 @@ Face ID can be tested in the iOS Simulator:
 3. Use Features > Face ID > Matching/Non-matching Face
 
 Touch ID testing in Simulator:
+
 1. Features > Touch ID > Enrolled
 2. Features > Touch ID > Matching/Non-matching Touch
 
@@ -436,8 +438,8 @@ function showLoginOptions() {
 await BiometricAuth.configure({
   iosConfig: {
     // Reuse authentication for 60 seconds (Touch ID only)
-    touchIDAuthenticationAllowableReuseDuration: 60
-  }
+    touchIDAuthenticationAllowableReuseDuration: 60,
+  },
 });
 ```
 
@@ -465,13 +467,14 @@ Enable verbose logging:
 
 ```typescript
 await BiometricAuth.configure({
-  enableLogging: true
+  enableLogging: true,
 });
 
 // View logs in Xcode console
 ```
 
 Check system logs:
+
 ```bash
 # View device logs
 xcrun simctl spawn booted log stream --level debug | grep BiometricAuth
@@ -516,7 +519,7 @@ The plugin leverages Secure Enclave when available:
 ```typescript
 // Automatically uses Secure Enclave for key operations
 await BiometricAuth.configure({
-  encryptionKey: 'auto' // Uses Secure Enclave-backed key
+  encryptionKey: 'auto', // Uses Secure Enclave-backed key
 });
 ```
 

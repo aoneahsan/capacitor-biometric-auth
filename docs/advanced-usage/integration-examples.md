@@ -11,7 +11,11 @@ This guide provides real-world integration examples for the `capacitor-biometric
 ```typescript
 // hooks/useBiometricAuth.ts
 import { useState, useEffect, useCallback } from 'react';
-import { BiometricAuth, BiometricAuthResult, BiometricErrorCode } from 'capacitor-biometric-authentication';
+import {
+  BiometricAuth,
+  BiometricAuthResult,
+  BiometricErrorCode,
+} from 'capacitor-biometric-authentication';
 
 interface UseBiometricAuthReturn {
   isAvailable: boolean;
@@ -43,34 +47,37 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
     }
   }, []);
 
-  const authenticate = useCallback(async (reason = 'Authenticate to continue') => {
-    if (!isAvailable) {
-      setError(new Error('Biometric authentication not available'));
-      return false;
-    }
-
-    setIsAuthenticating(true);
-    setError(null);
-
-    try {
-      const result = await BiometricAuth.authenticate({ reason });
-      setIsAuthenticated(result.isAuthenticated);
-      return result.isAuthenticated;
-    } catch (err: any) {
-      setError(err);
-      setIsAuthenticated(false);
-      
-      // Handle specific errors
-      if (err.code === BiometricErrorCode.USER_CANCELLED) {
-        // User cancelled - don't show error
-        setError(null);
+  const authenticate = useCallback(
+    async (reason = 'Authenticate to continue') => {
+      if (!isAvailable) {
+        setError(new Error('Biometric authentication not available'));
+        return false;
       }
-      
-      return false;
-    } finally {
-      setIsAuthenticating(false);
-    }
-  }, [isAvailable]);
+
+      setIsAuthenticating(true);
+      setError(null);
+
+      try {
+        const result = await BiometricAuth.authenticate({ reason });
+        setIsAuthenticated(result.isAuthenticated);
+        return result.isAuthenticated;
+      } catch (err: any) {
+        setError(err);
+        setIsAuthenticated(false);
+
+        // Handle specific errors
+        if (err.code === BiometricErrorCode.USER_CANCELLED) {
+          // User cancelled - don't show error
+          setError(null);
+        }
+
+        return false;
+      } finally {
+        setIsAuthenticating(false);
+      }
+    },
+    [isAvailable]
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -88,7 +95,7 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
     error,
     authenticate,
     logout,
-    checkAvailability
+    checkAvailability,
   };
 }
 ```
@@ -102,12 +109,8 @@ import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import { BiometricErrorCode } from 'capacitor-biometric-authentication';
 
 export function BiometricLogin({ onSuccess }: { onSuccess: () => void }) {
-  const { 
-    isAvailable, 
-    isAuthenticating, 
-    error, 
-    authenticate 
-  } = useBiometricAuth();
+  const { isAvailable, isAuthenticating, error, authenticate } =
+    useBiometricAuth();
 
   const handleAuthenticate = async () => {
     const success = await authenticate('Sign in to your account');
@@ -118,7 +121,7 @@ export function BiometricLogin({ onSuccess }: { onSuccess: () => void }) {
 
   const getErrorMessage = () => {
     if (!error) return null;
-    
+
     switch ((error as any).code) {
       case BiometricErrorCode.LOCKOUT:
         return 'Too many attempts. Please try again later.';
@@ -131,9 +134,9 @@ export function BiometricLogin({ onSuccess }: { onSuccess: () => void }) {
 
   if (!isAvailable) {
     return (
-      <div className="biometric-unavailable">
+      <div className='biometric-unavailable'>
         <p>Biometric authentication is not available on this device.</p>
-        <button onClick={() => window.location.href = '/login'}>
+        <button onClick={() => (window.location.href = '/login')}>
           Use Password
         </button>
       </div>
@@ -141,23 +144,22 @@ export function BiometricLogin({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <div className="biometric-login">
+    <div className='biometric-login'>
       <h2>Quick Sign In</h2>
-      <button 
+      <button
         onClick={handleAuthenticate}
         disabled={isAuthenticating}
-        className="biometric-button"
+        className='biometric-button'
       >
         {isAuthenticating ? 'Authenticating...' : 'Sign in with Biometric'}
       </button>
-      
-      {error && (
-        <div className="error-message">
-          {getErrorMessage()}
-        </div>
-      )}
-      
-      <a href="/login" className="fallback-link">
+
+      {error && <div className='error-message'>{getErrorMessage()}</div>}
+
+      <a
+        href='/login'
+        className='fallback-link'
+      >
         Use password instead
       </a>
     </div>
@@ -172,7 +174,10 @@ export function BiometricLogin({ onSuccess }: { onSuccess: () => void }) {
 ```typescript
 // composables/biometricAuth.ts
 import { ref, onMounted } from 'vue';
-import { BiometricAuth, BiometricType } from 'capacitor-biometric-authentication';
+import {
+  BiometricAuth,
+  BiometricType,
+} from 'capacitor-biometric-authentication';
 
 export function useBiometricAuth() {
   const isAvailable = ref(false);
@@ -184,7 +189,7 @@ export function useBiometricAuth() {
     try {
       const result = await BiometricAuth.isAvailable();
       isAvailable.value = result.isAvailable;
-      
+
       if (result.isAvailable) {
         const types = await BiometricAuth.getSupportedBiometrics();
         supportedTypes.value = types.supportedBiometrics;
@@ -205,11 +210,11 @@ export function useBiometricAuth() {
     error.value = null;
 
     try {
-      const result = await BiometricAuth.authenticate({ 
+      const result = await BiometricAuth.authenticate({
         reason,
-        fallbackButtonTitle: 'Use Password' 
+        fallbackButtonTitle: 'Use Password',
       });
-      
+
       return result.isAuthenticated;
     } catch (err: any) {
       error.value = err;
@@ -239,7 +244,7 @@ export function useBiometricAuth() {
     error,
     authenticate,
     getBiometricIcon,
-    checkAvailability
+    checkAvailability,
   };
 }
 ```
@@ -250,7 +255,10 @@ export function useBiometricAuth() {
 <!-- components/BiometricAuth.vue -->
 <template>
   <div class="biometric-auth">
-    <div v-if="isAvailable" class="auth-container">
+    <div
+      v-if="isAvailable"
+      class="auth-container"
+    >
       <v-btn
         @click="handleAuth"
         :loading="isAuthenticating"
@@ -261,20 +269,26 @@ export function useBiometricAuth() {
         <v-icon left>{{ biometricIcon }}</v-icon>
         {{ buttonText }}
       </v-btn>
-      
-      <v-alert 
-        v-if="error" 
-        type="error" 
+
+      <v-alert
+        v-if="error"
+        type="error"
         dismissible
         @click:close="error = null"
       >
         {{ errorMessage }}
       </v-alert>
     </div>
-    
-    <div v-else class="fallback-container">
+
+    <div
+      v-else
+      class="fallback-container"
+    >
       <p>Biometric authentication not available</p>
-      <v-btn @click="$emit('use-password')" text>
+      <v-btn
+        @click="$emit('use-password')"
+        text
+      >
         Use password login
       </v-btn>
     </div>
@@ -292,36 +306,32 @@ const emit = defineEmits<{
   'use-password': [];
 }>();
 
-const { 
-  isAvailable, 
-  isAuthenticating, 
-  error, 
-  authenticate, 
-  getBiometricIcon 
-} = useBiometricAuth();
+const { isAvailable, isAuthenticating, error, authenticate, getBiometricIcon } =
+  useBiometricAuth();
 
 const biometricIcon = computed(() => getBiometricIcon());
 
-const buttonText = computed(() => 
+const buttonText = computed(() =>
   isAuthenticating.value ? 'Authenticating...' : 'Sign in with Biometric'
 );
 
 const errorMessage = computed(() => {
   if (!error.value) return '';
-  
+
   const errorCode = (error.value as any).code;
   const messages: Record<string, string> = {
     [BiometricErrorCode.USER_CANCELLED]: 'Authentication cancelled',
     [BiometricErrorCode.LOCKOUT]: 'Too many attempts. Try again later.',
-    [BiometricErrorCode.BIOMETRIC_NOT_ENROLLED]: 'Please enroll biometrics in settings'
+    [BiometricErrorCode.BIOMETRIC_NOT_ENROLLED]:
+      'Please enroll biometrics in settings',
   };
-  
+
   return messages[errorCode] || 'Authentication failed';
 });
 
 const handleAuth = async () => {
   const success = await authenticate('Sign in to your account');
-  
+
   if (success) {
     emit('auth-success');
   } else if (error.value) {
@@ -340,15 +350,18 @@ const handleAuth = async () => {
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { BiometricAuth, BiometricAuthResult } from 'capacitor-biometric-authentication';
+import {
+  BiometricAuth,
+  BiometricAuthResult,
+} from 'capacitor-biometric-authentication';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BiometricAuthService {
   private isAvailableSubject = new BehaviorSubject<boolean>(false);
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-  
+
   public isAvailable$ = this.isAvailableSubject.asObservable();
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
@@ -408,11 +421,14 @@ import { BiometricAuthService } from '../services/biometric-auth.service';
 @Component({
   selector: 'app-biometric-login',
   template: `
-    <div class="biometric-login" *ngIf="isAvailable">
+    <div
+      class="biometric-login"
+      *ngIf="isAvailable"
+    >
       <h2>Welcome Back</h2>
-      
-      <button 
-        mat-raised-button 
+
+      <button
+        mat-raised-button
         color="primary"
         (click)="authenticate()"
         [disabled]="isAuthenticating"
@@ -420,28 +436,38 @@ import { BiometricAuthService } from '../services/biometric-auth.service';
         <mat-icon>fingerprint</mat-icon>
         {{ isAuthenticating ? 'Authenticating...' : 'Sign in with Biometric' }}
       </button>
-      
+
       <mat-error *ngIf="error">
         {{ error }}
       </mat-error>
-      
-      <a mat-button (click)="usePassword()">Use password instead</a>
+
+      <a
+        mat-button
+        (click)="usePassword()"
+        >Use password instead</a
+      >
     </div>
-    
-    <div *ngIf="!isAvailable" class="fallback">
+
+    <div
+      *ngIf="!isAvailable"
+      class="fallback"
+    >
       <p>Biometric authentication not available</p>
-      <button mat-raised-button (click)="usePassword()">
+      <button
+        mat-raised-button
+        (click)="usePassword()"
+      >
         Sign in with password
       </button>
     </div>
   `,
-  styleUrls: ['./biometric-login.component.scss']
+  styleUrls: ['./biometric-login.component.scss'],
 })
 export class BiometricLoginComponent implements OnInit, OnDestroy {
   isAvailable = false;
   isAuthenticating = false;
   error: string | null = null;
-  
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -452,7 +478,7 @@ export class BiometricLoginComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.biometricAuth.isAvailable$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(available => {
+      .subscribe((available) => {
         this.isAvailable = available;
       });
   }
@@ -461,21 +487,20 @@ export class BiometricLoginComponent implements OnInit, OnDestroy {
     this.isAuthenticating = true;
     this.error = null;
 
-    this.biometricAuth.authenticate('Sign in to your account')
-      .subscribe({
-        next: (authenticated) => {
-          if (authenticated) {
-            this.router.navigate(['/dashboard']);
-          }
-        },
-        error: (error) => {
-          this.error = this.getErrorMessage(error);
-          this.isAuthenticating = false;
-        },
-        complete: () => {
-          this.isAuthenticating = false;
+    this.biometricAuth.authenticate('Sign in to your account').subscribe({
+      next: (authenticated) => {
+        if (authenticated) {
+          this.router.navigate(['/dashboard']);
         }
-      });
+      },
+      error: (error) => {
+        this.error = this.getErrorMessage(error);
+        this.isAuthenticating = false;
+      },
+      complete: () => {
+        this.isAuthenticating = false;
+      },
+    });
   }
 
   usePassword() {
@@ -485,9 +510,9 @@ export class BiometricLoginComponent implements OnInit, OnDestroy {
   private getErrorMessage(error: any): string {
     // Map error codes to user-friendly messages
     const errorMessages: Record<string, string> = {
-      'USER_CANCELLED': 'Authentication cancelled',
-      'LOCKOUT': 'Too many attempts. Please try again later.',
-      'BIOMETRIC_NOT_ENROLLED': 'Please set up biometrics in device settings'
+      USER_CANCELLED: 'Authentication cancelled',
+      LOCKOUT: 'Too many attempts. Please try again later.',
+      BIOMETRIC_NOT_ENROLLED: 'Please set up biometrics in device settings',
     };
 
     return errorMessages[error.code] || 'Authentication failed';
@@ -507,11 +532,11 @@ export class BiometricLoginComponent implements OnInit, OnDestroy {
 ```typescript
 // services/firebase-biometric-auth.ts
 import { BiometricAuth } from 'capacitor-biometric-authentication';
-import { 
-  getAuth, 
-  signInWithCustomToken, 
+import {
+  getAuth,
+  signInWithCustomToken,
   onAuthStateChanged,
-  User 
+  User,
 } from 'firebase/auth';
 
 class FirebaseBiometricAuth {
@@ -522,7 +547,7 @@ class FirebaseBiometricAuth {
     // Configure biometric with Firebase-specific settings
     await BiometricAuth.configure({
       sessionDuration: 3600000, // 1 hour
-      storagePrefix: 'firebase_bio_'
+      storagePrefix: 'firebase_bio_',
     });
 
     // Listen for auth state changes
@@ -538,7 +563,7 @@ class FirebaseBiometricAuth {
     try {
       // 1. Authenticate with biometric
       const bioResult = await BiometricAuth.authenticate({
-        reason: 'Sign in to your account'
+        reason: 'Sign in to your account',
       });
 
       if (!bioResult.isAuthenticated) {
@@ -554,7 +579,7 @@ class FirebaseBiometricAuth {
 
       // 3. Sign in with custom token
       const credential = await signInWithCustomToken(this.auth, token);
-      
+
       return credential.user;
     } catch (error) {
       console.error('Biometric sign-in failed:', error);
@@ -569,7 +594,7 @@ class FirebaseBiometricAuth {
 
       // 2. Authenticate with biometric to store token
       const result = await BiometricAuth.authenticate({
-        reason: 'Link biometric to your account'
+        reason: 'Link biometric to your account',
       });
 
       if (result.isAuthenticated) {
@@ -597,7 +622,7 @@ class FirebaseBiometricAuth {
     const response = await fetch('/api/auth/custom-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid })
+      body: JSON.stringify({ uid }),
     });
 
     const { token } = await response.json();
@@ -612,7 +637,7 @@ await firebaseBioAuth.initialize();
 // Sign in
 const user = await firebaseBioAuth.signInWithBiometric();
 if (user) {
-  console.log('Signed in:', user.email);
+  consoleLog('Signed in:', user.email);
 }
 ```
 
@@ -632,7 +657,7 @@ class Auth0BiometricService {
       domain: 'your-domain.auth0.com',
       clientId: 'your-client-id',
       cacheLocation: 'localstorage',
-      useRefreshTokens: true
+      useRefreshTokens: true,
     });
   }
 
@@ -646,24 +671,24 @@ class Auth0BiometricService {
 
       // 2. Get refresh token
       const token = await this.auth0.getTokenSilently({
-        includeRefreshToken: true
+        includeRefreshToken: true,
       });
 
       // 3. Authenticate with biometric to store token
       const result = await BiometricAuth.authenticate({
-        reason: 'Enable biometric login'
+        reason: 'Enable biometric login',
       });
 
       if (result.isAuthenticated) {
         // 4. Store refresh token securely
         await this.storeRefreshToken(token);
-        
+
         // 5. Configure biometric settings
         await BiometricAuth.configure({
           sessionDuration: 1800000, // 30 minutes
           webConfig: {
-            rpName: 'Auth0 Biometric App'
-          }
+            rpName: 'Auth0 Biometric App',
+          },
         });
       }
     } catch (error) {
@@ -676,7 +701,7 @@ class Auth0BiometricService {
     try {
       // 1. Authenticate with biometric
       const bioResult = await BiometricAuth.authenticate({
-        reason: 'Sign in with biometric'
+        reason: 'Sign in with biometric',
       });
 
       if (!bioResult.isAuthenticated) {
@@ -692,18 +717,18 @@ class Auth0BiometricService {
 
       // 3. Use refresh token to get new access token
       await this.auth0.loginWithRefreshToken({
-        refreshToken
+        refreshToken,
       });
 
       // 4. Verify authentication
       const isAuthenticated = await this.auth0.isAuthenticated();
-      
+
       if (!isAuthenticated) {
         throw new Error('Auth0 authentication failed');
       }
     } catch (error) {
       console.error('Biometric login failed:', error);
-      
+
       // Clear stored credentials on failure
       await BiometricAuth.deleteCredentials();
       throw error;
@@ -713,13 +738,13 @@ class Auth0BiometricService {
   async logout(): Promise<void> {
     // Clear biometric credentials
     await BiometricAuth.deleteCredentials();
-    
+
     // Clear stored tokens
     this.refreshToken = null;
-    
+
     // Logout from Auth0
     await this.auth0.logout({
-      returnTo: window.location.origin
+      returnTo: window.location.origin,
     });
   }
 
@@ -753,7 +778,7 @@ class JWTBiometricAuth {
   private readonly ENCRYPTION_KEY = 'your-encryption-key';
 
   async authenticateAndStoreTokens(
-    username: string, 
+    username: string,
     password: string
   ): Promise<boolean> {
     try {
@@ -762,7 +787,7 @@ class JWTBiometricAuth {
 
       // 2. Authenticate with biometric to store tokens
       const bioResult = await BiometricAuth.authenticate({
-        reason: 'Enable quick sign-in'
+        reason: 'Enable quick sign-in',
       });
 
       if (!bioResult.isAuthenticated) {
@@ -783,7 +808,7 @@ class JWTBiometricAuth {
     try {
       // 1. Authenticate with biometric
       const result = await BiometricAuth.authenticate({
-        reason: 'Sign in to your account'
+        reason: 'Sign in to your account',
       });
 
       if (!result.isAuthenticated) {
@@ -828,8 +853,8 @@ class JWTBiometricAuth {
       ...options,
       headers: {
         ...options?.headers,
-        'Authorization': `Bearer ${tokens.accessToken}`
-      }
+        Authorization: `Bearer ${tokens.accessToken}`,
+      },
     });
 
     if (!response.ok) {
@@ -871,7 +896,7 @@ class JWTBiometricAuth {
     const encrypted = await this.encrypt(JSON.stringify(tokens));
     await Preferences.set({
       key: this.TOKEN_KEY,
-      value: encrypted
+      value: encrypted,
     });
   }
 
@@ -893,13 +918,13 @@ class JWTBiometricAuth {
   }
 
   private async loginToBackend(
-    username: string, 
+    username: string,
     password: string
   ): Promise<TokenPair> {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password }),
     });
 
     if (!response.ok) {
@@ -913,7 +938,7 @@ class JWTBiometricAuth {
     const response = await fetch('/api/auth/refresh', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken })
+      body: JSON.stringify({ refreshToken }),
     });
 
     if (!response.ok) {
@@ -944,7 +969,8 @@ await jwtBioAuth.authenticateAndStoreTokens('user@example.com', 'password');
 const tokens = await jwtBioAuth.authenticateWithBiometric();
 
 // Make authenticated requests
-const userData = await jwtBioAuth.makeAuthenticatedRequest<User>('/api/user/profile');
+const userData =
+  await jwtBioAuth.makeAuthenticatedRequest<User>('/api/user/profile');
 ```
 
 ## State Management Integration
@@ -969,7 +995,7 @@ const initialState: BiometricState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  sessionExpiresAt: null
+  sessionExpiresAt: null,
 };
 
 // Async thunks
@@ -985,15 +1011,15 @@ export const authenticateWithBiometric = createAsyncThunk(
   'biometric/authenticate',
   async (reason: string = 'Authenticate to continue') => {
     const result = await BiometricAuth.authenticate({ reason });
-    
+
     if (result.isAuthenticated) {
       const sessionDuration = 30 * 60 * 1000; // 30 minutes
       return {
         isAuthenticated: true,
-        sessionExpiresAt: Date.now() + sessionDuration
+        sessionExpiresAt: Date.now() + sessionDuration,
       };
     }
-    
+
     throw new Error('Authentication failed');
   }
 );
@@ -1018,7 +1044,7 @@ const biometricSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -1026,7 +1052,7 @@ const biometricSlice = createSlice({
       .addCase(checkBiometricAvailability.fulfilled, (state, action) => {
         state.isAvailable = action.payload;
       })
-      
+
       // Authentication
       .addCase(authenticateWithBiometric.pending, (state) => {
         state.isLoading = true;
@@ -1042,13 +1068,13 @@ const biometricSlice = createSlice({
         state.error = action.error.message || 'Authentication failed';
         state.isAuthenticated = false;
       })
-      
+
       // Logout
       .addCase(logoutBiometric.fulfilled, (state) => {
         state.isAuthenticated = false;
         state.sessionExpiresAt = null;
       });
-  }
+  },
 });
 
 export const { checkSessionExpiry, clearError } = biometricSlice.actions;
@@ -1061,7 +1087,10 @@ export default biometricSlice.reducer;
 // stores/biometricStore.ts
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { BiometricAuth, BiometricAuthResult } from 'capacitor-biometric-authentication';
+import {
+  BiometricAuth,
+  BiometricAuthResult,
+} from 'capacitor-biometric-authentication';
 
 interface BiometricStore {
   // State
@@ -1070,7 +1099,7 @@ interface BiometricStore {
   isLoading: boolean;
   error: Error | null;
   sessionExpiresAt: number | null;
-  
+
   // Actions
   initialize: () => Promise<void>;
   authenticate: (reason?: string) => Promise<boolean>;
@@ -1094,12 +1123,12 @@ export const useBiometricStore = create<BiometricStore>()(
         initialize: async () => {
           try {
             const { isAvailable } = await BiometricAuth.isAvailable();
-            
+
             await BiometricAuth.configure({
               sessionDuration: 30 * 60 * 1000,
-              enableLogging: process.env.NODE_ENV === 'development'
+              enableLogging: process.env.NODE_ENV === 'development',
             });
-            
+
             set({ isAvailable });
           } catch (error) {
             console.error('Failed to initialize biometric:', error);
@@ -1110,7 +1139,7 @@ export const useBiometricStore = create<BiometricStore>()(
         // Authenticate
         authenticate: async (reason = 'Authenticate to continue') => {
           const state = get();
-          
+
           if (!state.isAvailable) {
             set({ error: new Error('Biometric not available') });
             return false;
@@ -1120,24 +1149,24 @@ export const useBiometricStore = create<BiometricStore>()(
 
           try {
             const result = await BiometricAuth.authenticate({ reason });
-            
+
             if (result.isAuthenticated) {
               const sessionDuration = 30 * 60 * 1000;
               set({
                 isAuthenticated: true,
                 sessionExpiresAt: Date.now() + sessionDuration,
-                isLoading: false
+                isLoading: false,
               });
               return true;
             }
-            
+
             set({ isAuthenticated: false, isLoading: false });
             return false;
           } catch (error: any) {
             set({
               error,
               isAuthenticated: false,
-              isLoading: false
+              isLoading: false,
             });
             return false;
           }
@@ -1149,7 +1178,7 @@ export const useBiometricStore = create<BiometricStore>()(
             await BiometricAuth.deleteCredentials();
             set({
               isAuthenticated: false,
-              sessionExpiresAt: null
+              sessionExpiresAt: null,
             });
           } catch (error: any) {
             set({ error });
@@ -1159,31 +1188,31 @@ export const useBiometricStore = create<BiometricStore>()(
         // Check session validity
         checkSession: () => {
           const state = get();
-          
+
           if (!state.isAuthenticated || !state.sessionExpiresAt) {
             return false;
           }
-          
+
           if (Date.now() > state.sessionExpiresAt) {
             set({
               isAuthenticated: false,
-              sessionExpiresAt: null
+              sessionExpiresAt: null,
             });
             return false;
           }
-          
+
           return true;
         },
 
         // Clear error
-        clearError: () => set({ error: null })
+        clearError: () => set({ error: null }),
       }),
       {
         name: 'biometric-store',
         partialize: (state) => ({
           isAuthenticated: state.isAuthenticated,
-          sessionExpiresAt: state.sessionExpiresAt
-        })
+          sessionExpiresAt: state.sessionExpiresAt,
+        }),
       }
     )
   )
@@ -1191,13 +1220,8 @@ export const useBiometricStore = create<BiometricStore>()(
 
 // Usage in React component
 function LoginComponent() {
-  const { 
-    isAvailable, 
-    isLoading, 
-    error, 
-    authenticate, 
-    clearError 
-  } = useBiometricStore();
+  const { isAvailable, isLoading, error, authenticate, clearError } =
+    useBiometricStore();
 
   useEffect(() => {
     useBiometricStore.getState().initialize();

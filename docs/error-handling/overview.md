@@ -8,9 +8,9 @@ All errors thrown by the plugin follow this structure:
 
 ```typescript
 interface BiometricError {
-  code: BiometricErrorCode;    // Standardized error code
-  message: string;              // Human-readable message
-  details?: any;                // Platform-specific details
+  code: BiometricErrorCode; // Standardized error code
+  message: string; // Human-readable message
+  details?: any; // Platform-specific details
 }
 ```
 
@@ -23,22 +23,22 @@ enum BiometricErrorCode {
   // User Actions
   USER_CANCELLED = 'USER_CANCELLED',
   USER_FALLBACK = 'USER_FALLBACK',
-  
+
   // Authentication Failures
   AUTHENTICATION_FAILED = 'AUTHENTICATION_FAILED',
   LOCKOUT = 'LOCKOUT',
   LOCKOUT_PERMANENT = 'LOCKOUT_PERMANENT',
-  
+
   // System Issues
   SYSTEM_CANCELLED = 'SYSTEM_CANCELLED',
   NOT_AVAILABLE = 'NOT_AVAILABLE',
   PERMISSION_DENIED = 'PERMISSION_DENIED',
-  
+
   // Configuration Issues
   BIOMETRIC_NOT_ENROLLED = 'BIOMETRIC_NOT_ENROLLED',
-  
+
   // General
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR'
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
 ```
 
@@ -49,9 +49,9 @@ enum BiometricErrorCode {
 ```typescript
 try {
   const result = await BiometricAuth.authenticate({
-    reason: 'Please authenticate'
+    reason: 'Please authenticate',
   });
-  
+
   if (result.isAuthenticated) {
     // Success flow
   }
@@ -61,17 +61,17 @@ try {
     case BiometricErrorCode.USER_CANCELLED:
       // User cancelled - no action needed
       break;
-      
+
     case BiometricErrorCode.AUTHENTICATION_FAILED:
       // Wrong biometric - allow retry
       showError('Authentication failed. Please try again.');
       break;
-      
+
     case BiometricErrorCode.LOCKOUT:
       // Too many attempts - wait
       showError('Too many attempts. Please wait 30 seconds.');
       break;
-      
+
     default:
       // Generic error handling
       showError('An error occurred. Please try again.');
@@ -85,85 +85,84 @@ try {
 class BiometricErrorHandler {
   private retryCount = 0;
   private readonly maxRetries = 3;
-  
+
   async authenticateWithRetry(): Promise<boolean> {
     try {
       const result = await BiometricAuth.authenticate({
-        reason: 'Authenticate to continue'
+        reason: 'Authenticate to continue',
       });
-      
+
       this.retryCount = 0; // Reset on success
       return result.isAuthenticated;
-      
     } catch (error: any) {
       return this.handleError(error);
     }
   }
-  
+
   private async handleError(error: BiometricError): Promise<boolean> {
     console.error('Biometric error:', error);
-    
+
     switch (error.code) {
       case BiometricErrorCode.USER_CANCELLED:
         // User explicitly cancelled
         this.showMessage('Authentication cancelled');
         return false;
-        
+
       case BiometricErrorCode.USER_FALLBACK:
         // User chose fallback option
         return this.handleFallback();
-        
+
       case BiometricErrorCode.AUTHENTICATION_FAILED:
         // Biometric not recognized
         return this.handleFailedAttempt();
-        
+
       case BiometricErrorCode.LOCKOUT:
         // Temporary lockout
         return this.handleLockout(false);
-        
+
       case BiometricErrorCode.LOCKOUT_PERMANENT:
         // Permanent lockout
         return this.handleLockout(true);
-        
+
       case BiometricErrorCode.SYSTEM_CANCELLED:
         // System interrupted (e.g., app backgrounded)
         return this.handleSystemInterruption();
-        
+
       case BiometricErrorCode.NOT_AVAILABLE:
         // Biometric not available
         return this.handleNotAvailable();
-        
+
       case BiometricErrorCode.PERMISSION_DENIED:
         // Permission issue
         return this.handlePermissionDenied();
-        
+
       case BiometricErrorCode.BIOMETRIC_NOT_ENROLLED:
         // No biometrics enrolled
         return this.handleNotEnrolled();
-        
+
       default:
         // Unknown error
         return this.handleUnknownError(error);
     }
   }
-  
+
   private async handleFailedAttempt(): Promise<boolean> {
     this.retryCount++;
-    
+
     if (this.retryCount >= this.maxRetries) {
       this.showMessage('Maximum attempts exceeded. Please use password.');
       return false;
     }
-    
+
     this.showMessage(
       `Authentication failed. ${this.maxRetries - this.retryCount} attempts remaining.`
     );
-    
+
     // Allow retry after delay
     await this.delay(1000);
     return this.authenticateWithRetry();
   }
-  
+
   private async handleLockout(isPermanent: boolean): Promise<boolean> {
     if (isPermanent) {
       this.showMessage(
@@ -178,36 +177,36 @@ class BiometricErrorHandler {
       // Start countdown timer
       this.startLockoutTimer(30);
     }
-    
+
     return false;
   }
-  
+
   private handleNotEnrolled(): boolean {
     this.showMessage(
       'No biometrics enrolled. Please set up biometrics in device settings.'
     );
-    
+
     // Offer to open settings
     this.showAction('Open Settings', () => {
       this.openBiometricSettings();
     });
-    
+
     return false;
   }
-  
+
   private handleSystemInterruption(): Promise<boolean> {
     this.showMessage('Authentication interrupted. Please try again.');
-    
+
     // Retry automatically after short delay
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         this.authenticateWithRetry().then(resolve);
       }, 500);
     });
   }
-  
+
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 ```
@@ -230,7 +229,7 @@ const androidErrorMap = {
   ERROR_UNABLE_TO_PROCESS: BiometricErrorCode.AUTHENTICATION_FAILED,
   ERROR_TIMEOUT: BiometricErrorCode.SYSTEM_CANCELLED,
   ERROR_NO_SPACE: BiometricErrorCode.UNKNOWN_ERROR,
-  ERROR_VENDOR: BiometricErrorCode.UNKNOWN_ERROR
+  ERROR_VENDOR: BiometricErrorCode.UNKNOWN_ERROR,
 };
 ```
 
@@ -248,7 +247,7 @@ const iosErrorMap = {
   LAErrorBiometryLockout: BiometricErrorCode.LOCKOUT,
   LAErrorAppCancel: BiometricErrorCode.SYSTEM_CANCELLED,
   LAErrorInvalidContext: BiometricErrorCode.UNKNOWN_ERROR,
-  LAErrorNotInteractive: BiometricErrorCode.UNKNOWN_ERROR
+  LAErrorNotInteractive: BiometricErrorCode.UNKNOWN_ERROR,
 };
 ```
 
@@ -257,13 +256,13 @@ const iosErrorMap = {
 ```typescript
 // WebAuthn error names to plugin error codes
 const webErrorMap = {
-  'NotAllowedError': BiometricErrorCode.USER_CANCELLED,
-  'SecurityError': BiometricErrorCode.PERMISSION_DENIED,
-  'AbortError': BiometricErrorCode.SYSTEM_CANCELLED,
-  'ConstraintError': BiometricErrorCode.NOT_AVAILABLE,
-  'InvalidStateError': BiometricErrorCode.UNKNOWN_ERROR,
-  'NotSupportedError': BiometricErrorCode.NOT_AVAILABLE,
-  'UnknownError': BiometricErrorCode.UNKNOWN_ERROR
+  NotAllowedError: BiometricErrorCode.USER_CANCELLED,
+  SecurityError: BiometricErrorCode.PERMISSION_DENIED,
+  AbortError: BiometricErrorCode.SYSTEM_CANCELLED,
+  ConstraintError: BiometricErrorCode.NOT_AVAILABLE,
+  InvalidStateError: BiometricErrorCode.UNKNOWN_ERROR,
+  NotSupportedError: BiometricErrorCode.NOT_AVAILABLE,
+  UnknownError: BiometricErrorCode.UNKNOWN_ERROR,
 };
 ```
 
@@ -274,31 +273,28 @@ const webErrorMap = {
 ```typescript
 class SmartRetryHandler {
   private readonly retryDelays = [1000, 2000, 5000]; // Progressive delays
-  
-  async authenticateWithSmartRetry(
-    maxAttempts: number = 3
-  ): Promise<boolean> {
+
+  async authenticateWithSmartRetry(maxAttempts: number = 3): Promise<boolean> {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const result = await BiometricAuth.authenticate({
           reason: 'Please authenticate',
-          maxAttempts: 1 // Single attempt per try
+          maxAttempts: 1, // Single attempt per try
         });
-        
+
         return result.isAuthenticated;
-        
       } catch (error: any) {
         // Don't retry for user actions
         if (this.isUserAction(error.code)) {
           return false;
         }
-        
+
         // Don't retry for permanent errors
         if (this.isPermanentError(error.code)) {
           this.handlePermanentError(error);
           return false;
         }
-        
+
         // Retry with delay for temporary errors
         if (attempt < maxAttempts - 1) {
           const delay = this.retryDelays[attempt] || 5000;
@@ -306,28 +302,28 @@ class SmartRetryHandler {
           await this.delay(delay);
           continue;
         }
-        
+
         // Final attempt failed
         this.handleFinalFailure(error);
         return false;
       }
     }
-    
+
     return false;
   }
-  
+
   private isUserAction(code: BiometricErrorCode): boolean {
     return [
       BiometricErrorCode.USER_CANCELLED,
-      BiometricErrorCode.USER_FALLBACK
+      BiometricErrorCode.USER_FALLBACK,
     ].includes(code);
   }
-  
+
   private isPermanentError(code: BiometricErrorCode): boolean {
     return [
       BiometricErrorCode.LOCKOUT_PERMANENT,
       BiometricErrorCode.PERMISSION_DENIED,
-      BiometricErrorCode.BIOMETRIC_NOT_ENROLLED
+      BiometricErrorCode.BIOMETRIC_NOT_ENROLLED,
     ].includes(code);
   }
 }
@@ -342,44 +338,43 @@ class FallbackAuthHandler {
       // Try biometric first
       const result = await BiometricAuth.authenticate({
         reason: 'Authenticate with biometric',
-        fallbackButtonTitle: 'Use Password'
+        fallbackButtonTitle: 'Use Password',
       });
-      
+
       return result.isAuthenticated;
-      
     } catch (error: any) {
       if (error.code === BiometricErrorCode.USER_FALLBACK) {
         // User chose fallback
         return this.showPasswordAuth();
       }
-      
+
       // Other errors - offer fallback
       const useFallback = await this.confirmFallback(error);
       if (useFallback) {
         return this.showPasswordAuth();
       }
-      
+
       return false;
     }
   }
-  
+
   private async confirmFallback(error: BiometricError): Promise<boolean> {
     const message = this.getErrorMessage(error);
-    
-    return new Promise(resolve => {
+
+    return new Promise((resolve) => {
       this.showDialog({
         title: 'Authentication Failed',
         message: message,
         buttons: [
           {
             text: 'Try Again',
-            handler: () => resolve(false)
+            handler: () => resolve(false),
           },
           {
             text: 'Use Password',
-            handler: () => resolve(true)
-          }
-        ]
+            handler: () => resolve(true),
+          },
+        ],
       });
     });
   }
@@ -401,37 +396,37 @@ class BiometricErrorLogger {
       context: {
         ...context,
         deviceInfo: this.getDeviceInfo(),
-        appVersion: this.getAppVersion()
+        appVersion: this.getAppVersion(),
       },
-      stack: error.stack || 'No stack trace'
+      stack: error.stack || 'No stack trace',
     };
-    
+
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Biometric Error:', errorLog);
     }
-    
+
     // Send to analytics/monitoring service
     this.sendToMonitoring(errorLog);
   }
-  
+
   private sendToMonitoring(errorLog: any) {
     // Example: Sentry
     if (typeof Sentry !== 'undefined') {
       Sentry.captureException(new Error(errorLog.errorMessage), {
         tags: {
           errorCode: errorLog.errorCode,
-          platform: errorLog.platform
+          platform: errorLog.platform,
         },
-        extra: errorLog.context
+        extra: errorLog.context,
       });
     }
-    
+
     // Example: Custom analytics
     if (typeof analytics !== 'undefined') {
       analytics.track('biometric_error', {
         error_code: errorLog.errorCode,
-        platform: errorLog.platform
+        platform: errorLog.platform,
       });
     }
   }
@@ -444,40 +439,40 @@ class BiometricErrorLogger {
 
 ```typescript
 const userFriendlyMessages: Record<BiometricErrorCode, string> = {
-  [BiometricErrorCode.USER_CANCELLED]: 
-    'Authentication cancelled',
-    
-  [BiometricErrorCode.USER_FALLBACK]: 
-    'Please enter your password',
-    
-  [BiometricErrorCode.AUTHENTICATION_FAILED]: 
+  [BiometricErrorCode.USER_CANCELLED]: 'Authentication cancelled',
+
+  [BiometricErrorCode.USER_FALLBACK]: 'Please enter your password',
+
+  [BiometricErrorCode.AUTHENTICATION_FAILED]:
     'Biometric not recognized. Please try again.',
-    
-  [BiometricErrorCode.LOCKOUT]: 
+
+  [BiometricErrorCode.LOCKOUT]:
     'Too many failed attempts. Please wait 30 seconds.',
-    
-  [BiometricErrorCode.LOCKOUT_PERMANENT]: 
+
+  [BiometricErrorCode.LOCKOUT_PERMANENT]:
     'Biometric is locked. Unlock your device to reset.',
-    
-  [BiometricErrorCode.SYSTEM_CANCELLED]: 
+
+  [BiometricErrorCode.SYSTEM_CANCELLED]:
     'Authentication was interrupted. Please try again.',
-    
-  [BiometricErrorCode.NOT_AVAILABLE]: 
+
+  [BiometricErrorCode.NOT_AVAILABLE]:
     'Biometric authentication is not available.',
-    
-  [BiometricErrorCode.PERMISSION_DENIED]: 
+
+  [BiometricErrorCode.PERMISSION_DENIED]:
     'Permission denied. Please check your settings.',
-    
-  [BiometricErrorCode.BIOMETRIC_NOT_ENROLLED]: 
+
+  [BiometricErrorCode.BIOMETRIC_NOT_ENROLLED]:
     'No biometrics enrolled. Please set up in device settings.',
-    
-  [BiometricErrorCode.UNKNOWN_ERROR]: 
-    'An unexpected error occurred. Please try again.'
+
+  [BiometricErrorCode.UNKNOWN_ERROR]:
+    'An unexpected error occurred. Please try again.',
 };
 
 function getUserMessage(error: BiometricError): string {
-  return userFriendlyMessages[error.code] || 
-         'Authentication failed. Please try again.';
+  return (
+    userFriendlyMessages[error.code] ||
+    'Authentication failed. Please try again.'
+  );
 }
 ```
 
@@ -493,19 +488,19 @@ class BiometricErrorSimulator {
     const error: BiometricError = {
       code: errorCode,
       message: `Simulated error: ${errorCode}`,
-      details: { simulated: true }
+      details: { simulated: true },
     };
-    
+
     // Trigger error handler
     const handler = new BiometricErrorHandler();
     await handler.handleError(error);
   }
-  
+
   async runAllErrorScenarios() {
     const scenarios = Object.values(BiometricErrorCode);
-    
+
     for (const errorCode of scenarios) {
-      console.log(`Testing error: ${errorCode}`);
+      consoleLog(`Testing error: ${errorCode}`);
       await this.simulateError(errorCode);
       await this.delay(2000); // Wait between tests
     }
