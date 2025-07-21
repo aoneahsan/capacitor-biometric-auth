@@ -286,10 +286,21 @@ public class BiometricAuthPlugin extends Plugin {
         boolean disableFallback = call.getBoolean("disableFallback", false);
         boolean saveCredentials = call.getBoolean("saveCredentials", false);
         
+        // Extract WebAuthn challenge if provided
+        String webAuthnChallenge = null;
+        JSObject webAuthnOptions = call.getObject("webAuthnOptions");
+        if (webAuthnOptions != null) {
+            JSObject getOptions = webAuthnOptions.getJSObject("get");
+            if (getOptions != null) {
+                webAuthnChallenge = getOptions.getString("challenge");
+            }
+        }
+        
         // Create executor
         Executor executor = ContextCompat.getMainExecutor(activity);
         
-        // Create authentication callback
+        // Create authentication callback with access to challenge
+        final String finalChallenge = webAuthnChallenge;
         biometricPrompt = new BiometricPrompt(fragmentActivity, executor, new BiometricPrompt.AuthenticationCallback() {
             @Override
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
@@ -334,8 +345,11 @@ public class BiometricAuthPlugin extends Plugin {
                 
                 JSObject response = new JSObject();
                 response.put("authenticatorData", ""); // Empty for mobile (handled by backend)
+                
+                // Use WebAuthn challenge if provided, otherwise fallback to timestamp
+                String challengeToUse = finalChallenge != null ? finalChallenge : "mobile_auth_" + System.currentTimeMillis();
                 response.put("clientDataJSON", base64UrlEncode(createClientDataJSON("webauthn.get", 
-                    "mobile_auth_" + System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8)));
+                    challengeToUse).getBytes(StandardCharsets.UTF_8)));
                 response.put("signature", base64UrlEncode(("mobile_signature_" + sessionId).getBytes(StandardCharsets.UTF_8)));
                 response.put("userHandle", ""); // Will be set by backend
                 

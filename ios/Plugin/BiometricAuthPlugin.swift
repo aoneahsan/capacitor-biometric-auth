@@ -185,6 +185,14 @@ public class BiometricAuthPlugin: CAPPlugin {
         
         let reason = call.getString("description") ?? call.getString("subtitle") ?? call.getString("title") ?? "Authenticate to continue"
         
+        // Extract WebAuthn challenge if provided
+        var webAuthnChallenge: String? = nil
+        if let webAuthnOptions = call.getObject("webAuthnOptions"),
+           let getOptions = webAuthnOptions["get"] as? [String: Any],
+           let challenge = getOptions["challenge"] as? String {
+            webAuthnChallenge = challenge
+        }
+        
         let policy: LAPolicy = allowDeviceCredential ? .deviceOwnerAuthentication : .deviceOwnerAuthenticationWithBiometrics
         
         context.evaluatePolicy(policy, localizedReason: reason) { success, error in
@@ -194,6 +202,9 @@ public class BiometricAuthPlugin: CAPPlugin {
                     let credentialId = "mobile_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
                     let sessionId = UUID().uuidString
                     
+                    // Use the WebAuthn challenge if provided, otherwise fallback to timestamp
+                    let challengeToUse = webAuthnChallenge ?? "mobile_auth_\(Int(Date().timeIntervalSince1970 * 1000))"
+                    
                     // Create enhanced credential data for backend verification
                     let credentialData: [String: Any] = [
                         "id": credentialId,
@@ -201,7 +212,7 @@ public class BiometricAuthPlugin: CAPPlugin {
                         "response": [
                             "authenticatorData": "", // Empty for mobile (handled by backend)
                             "clientDataJSON": self.base64UrlEncode(self.createClientDataJSON(type: "webauthn.get", 
-                                challenge: "mobile_auth_\(Int(Date().timeIntervalSince1970 * 1000))").data(using: .utf8) ?? Data()),
+                                challenge: challengeToUse).data(using: .utf8) ?? Data()),
                             "signature": self.base64UrlEncode("mobile_signature_\(sessionId)".data(using: .utf8) ?? Data()),
                             "userHandle": "" // Will be set by backend
                         ],
