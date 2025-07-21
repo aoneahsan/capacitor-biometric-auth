@@ -77,6 +77,41 @@ public class BiometricAuthPlugin: CAPPlugin {
         }
     }
     
+    private func generateDeviceFingerprint() -> String {
+        var fingerprintComponents: [String] = []
+        
+        // Device model
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let deviceModel = String(bytes: Data(bytes: &systemInfo.machine, count: Int(_SYS_NAMELEN)), encoding: .ascii)?.trimmingCharacters(in: .controlCharacters) ?? "unknown"
+        fingerprintComponents.append(deviceModel)
+        
+        // Screen resolution
+        let screenSize = UIScreen.main.bounds
+        let screenScale = UIScreen.main.scale
+        let screenInfo = "\(Int(screenSize.width * screenScale))x\(Int(screenSize.height * screenScale))"
+        fingerprintComponents.append(screenInfo)
+        
+        // Language/Locale
+        let locale = Locale.current.identifier
+        fingerprintComponents.append(locale)
+        
+        // Timezone
+        let timezone = TimeZone.current.identifier
+        fingerprintComponents.append(timezone)
+        
+        // iOS version
+        let iosVersion = UIDevice.current.systemVersion
+        fingerprintComponents.append(iosVersion)
+        
+        let fingerprint = fingerprintComponents.joined(separator: "|")
+        let fingerprintData = fingerprint.data(using: .utf8) ?? Data()
+        let base64Fingerprint = fingerprintData.base64EncodedString()
+        
+        // Return first 32 characters
+        return String(base64Fingerprint.prefix(32))
+    }
+    
     @objc func isAvailable(_ call: CAPPluginCall) {
         let context = LAContext()
         var error: NSError?
@@ -172,7 +207,8 @@ public class BiometricAuthPlugin: CAPPlugin {
                         ],
                         "type": "public-key",
                         "clientExtensionResults": "{}",
-                        "authenticatorAttachment": "platform"
+                        "authenticatorAttachment": "platform",
+                        "deviceFingerprint": self.generateDeviceFingerprint()
                     ]
                     
                     // Create enhanced token with credential data
@@ -258,7 +294,8 @@ public class BiometricAuthPlugin: CAPPlugin {
                         ],
                         "type": "public-key",
                         "clientExtensionResults": "{}",
-                        "authenticatorAttachment": "platform"
+                        "authenticatorAttachment": "platform",
+                        "deviceFingerprint": self.generateDeviceFingerprint()
                     ]
                     
                     // Create enhanced token with credential data

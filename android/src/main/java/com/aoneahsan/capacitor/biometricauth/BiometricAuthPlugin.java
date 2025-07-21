@@ -139,6 +139,40 @@ public class BiometricAuthPlugin extends Plugin {
         }
     }
     
+    private String generateDeviceFingerprint() {
+        try {
+            Context context = getContext();
+            StringBuilder fingerprintBuilder = new StringBuilder();
+            
+            // User agent
+            fingerprintBuilder.append(System.getProperty("http.agent", "unknown"));
+            fingerprintBuilder.append("|");
+            
+            // Screen resolution
+            fingerprintBuilder.append(context.getResources().getDisplayMetrics().widthPixels);
+            fingerprintBuilder.append("x");
+            fingerprintBuilder.append(context.getResources().getDisplayMetrics().heightPixels);
+            fingerprintBuilder.append("|");
+            
+            // Language/Locale
+            fingerprintBuilder.append(java.util.Locale.getDefault().toString());
+            fingerprintBuilder.append("|");
+            
+            // Timezone
+            fingerprintBuilder.append(java.util.TimeZone.getDefault().getID());
+            fingerprintBuilder.append("|");
+            
+            // Device model (optional, be careful with privacy)
+            fingerprintBuilder.append(android.os.Build.MODEL);
+            
+            String fingerprint = fingerprintBuilder.toString();
+            return Base64.encodeToString(fingerprint.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP).substring(0, 32);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to generate device fingerprint", e);
+            return "android_" + UUID.randomUUID().toString().replace("-", "").substring(0, 28);
+        }
+    }
+    
     private String createClientDataJSON(String type, String challenge) {
         try {
             JSONObject clientData = new JSONObject();
@@ -309,6 +343,7 @@ public class BiometricAuthPlugin extends Plugin {
                 credentialData.put("type", "public-key");
                 credentialData.put("clientExtensionResults", "{}");
                 credentialData.put("authenticatorAttachment", "platform");
+                credentialData.put("deviceFingerprint", generateDeviceFingerprint());
                 
                 // Create enhanced token with credential data
                 String token = createEnhancedToken(credentialId, "authentication", credentialData);
@@ -432,6 +467,7 @@ public class BiometricAuthPlugin extends Plugin {
                 credentialData.put("type", "public-key");
                 credentialData.put("clientExtensionResults", "{}");
                 credentialData.put("authenticatorAttachment", "platform");
+                credentialData.put("deviceFingerprint", generateDeviceFingerprint());
                 
                 // Create enhanced token with credential data
                 String token = createEnhancedToken(credentialId, "registration", credentialData);
