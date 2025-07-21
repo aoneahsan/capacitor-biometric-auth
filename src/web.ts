@@ -101,19 +101,20 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
         };
       }
 
+      // If WebAuthn options are provided, use them directly
+      if (options?.webAuthnOptions?.get) {
+        return this.authenticateWithWebAuthnOptions(options);
+      }
+
       // Get stored credentials for the user
-      const userId = options?.webAuthnOptions?.get?.rpId || 
-                     options?.webAuthnOptions?.create?.user?.name;
+      const userId =
+        options?.webAuthnOptions?.get?.rpId ||
+        options?.webAuthnOptions?.create?.user?.name;
       const storedCredentialIds = getStoredCredentialIds(userId);
 
       // If no stored credentials and user wants to save credentials, register instead
       if (storedCredentialIds.length === 0 && options?.saveCredentials) {
         return this.register(options);
-      }
-
-      // If user provided specific WebAuthn get options, use them
-      if (options?.webAuthnOptions?.get) {
-        return this.authenticateWithCredentials(options);
       }
 
       // If we have stored credentials, try to authenticate with them
@@ -128,38 +129,120 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
     }
   }
 
-  private async authenticateWithCredentials(
-    options?: BiometricAuthOptions
+  private async authenticateWithWebAuthnOptions(
+    options: BiometricAuthOptions
   ): Promise<BiometricAuthResult> {
     try {
-      // Get stored credential IDs
-      const userId = options?.webAuthnOptions?.get?.rpId || 
-                     options?.webAuthnOptions?.create?.user?.name;
-      const storedCredentialIds = getStoredCredentialIds(userId);
-
-      // Prepare allowed credentials
-      const allowCredentials = storedCredentialIds.map(id => ({
-        id: Uint8Array.from(atob(id), c => c.charCodeAt(0)),
-        type: 'public-key' as PublicKeyCredentialType,
-        transports: ['internal'] as AuthenticatorTransport[],
-      }));
-
-      // Merge user options with defaults
-      const getOptions = mergeGetOptions(
-        options?.webAuthnOptions?.get,
-        {
-          rpId: window.location.hostname,
-          userVerification: 'required',
-          allowCredentials: allowCredentials.length > 0 ? allowCredentials : undefined,
-        }
-      );
+      // Use the provided WebAuthn options directly
+      const getOptions = mergeGetOptions(options.webAuthnOptions?.get);
 
       // Get the credential
       const credential = (await navigator.credentials.get({
         publicKey: getOptions,
       })) as PublicKeyCredential;
 
-      if (credential && credential.response instanceof AuthenticatorAssertionResponse) {
+      if (
+        credential &&
+        credential.response instanceof AuthenticatorAssertionResponse
+      ) {
+        // Generate session token and include credential data
+        const sessionId = crypto.randomUUID();
+        const credentialId = arrayBufferToBase64(credential.rawId);
+
+        // Create enhanced token with credential data for backend verification
+        const credentialData = {
+          id: credential.id,
+          rawId: arrayBufferToBase64(credential.rawId),
+          response: {
+            authenticatorData: arrayBufferToBase64(
+              credential.response.authenticatorData
+            ),
+            clientDataJSON: arrayBufferToBase64(
+              credential.response.clientDataJSON
+            ),
+            signature: arrayBufferToBase64(credential.response.signature),
+            userHandle: credential.response.userHandle
+              ? arrayBufferToBase64(credential.response.userHandle)
+              : undefined,
+          },
+          type: credential.type,
+          clientExtensionResults: JSON.stringify(
+            credential.getClientExtensionResults?.() || {}
+          ),
+          authenticatorAttachment: (credential as any).authenticatorAttachment,
+        };
+
+        const token = btoa(
+          JSON.stringify({
+            credentialId,
+            timestamp: Date.now(),
+            sessionId,
+            type: 'authentication',
+            credentialData, // Include full credential data
+          })
+        );
+
+        // Store session
+        const expiresAt =
+          Date.now() + (this.config.sessionDuration || 3600) * 1000;
+        this.sessions.set(sessionId, { token, expiresAt });
+
+        // Clean up expired sessions
+        this.cleanupExpiredSessions();
+
+        return {
+          success: true,
+          token,
+          sessionId,
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          code: BiometricErrorCode.AUTHENTICATION_FAILED,
+          message: 'Failed to authenticate with credential',
+        },
+      };
+    } catch (error) {
+      return this.handleWebAuthnError(error);
+    }
+  }
+
+  private async authenticateWithCredentials(
+    options?: BiometricAuthOptions
+  ): Promise<BiometricAuthResult> {
+    try {
+      // Get stored credential IDs
+      const userId =
+        options?.webAuthnOptions?.get?.rpId ||
+        options?.webAuthnOptions?.create?.user?.name;
+      const storedCredentialIds = getStoredCredentialIds(userId);
+
+      // Prepare allowed credentials
+      const allowCredentials = storedCredentialIds.map((id) => ({
+        id: Uint8Array.from(atob(id), (c) => c.charCodeAt(0)),
+        type: 'public-key' as PublicKeyCredentialType,
+        transports: ['internal'] as AuthenticatorTransport[],
+      }));
+
+      // Merge user options with defaults
+      const getOptions = mergeGetOptions(options?.webAuthnOptions?.get, {
+        rpId: window.location.hostname,
+        userVerification: 'required',
+        allowCredentials:
+          allowCredentials.length > 0 ? allowCredentials : undefined,
+      });
+
+      // Get the credential
+      const credential = (await navigator.credentials.get({
+        publicKey: getOptions,
+      })) as PublicKeyCredential;
+
+      if (
+        credential &&
+        credential.response instanceof AuthenticatorAssertionResponse
+      ) {
         // Generate session token
         const sessionId = crypto.randomUUID();
         const credentialId = arrayBufferToBase64(credential.rawId);
@@ -199,9 +282,7 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
     }
   }
 
-  async register(
-    options?: BiometricAuthOptions
-  ): Promise<BiometricAuthResult> {
+  async register(options?: BiometricAuthOptions): Promise<BiometricAuthResult> {
     try {
       // Check availability first
       const availability = await this.isAvailable();
@@ -217,7 +298,12 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
         };
       }
 
-      // Merge user options with defaults
+      // If WebAuthn options are provided, use them directly
+      if (options?.webAuthnOptions?.create) {
+        return this.registerWithWebAuthnOptions(options);
+      }
+
+      // Merge user options with defaults for fallback
       const createOptions = mergeCreateOptions(
         options?.webAuthnOptions?.create,
         {
@@ -236,7 +322,10 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
         publicKey: createOptions,
       })) as PublicKeyCredential;
 
-      if (credential && credential.response instanceof AuthenticatorAttestationResponse) {
+      if (
+        credential &&
+        credential.response instanceof AuthenticatorAttestationResponse
+      ) {
         // Store credential ID for future authentication
         const credentialId = arrayBufferToBase64(credential.rawId);
         const userId = options?.webAuthnOptions?.create?.user?.name;
@@ -250,6 +339,86 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
             timestamp: Date.now(),
             sessionId,
             type: 'registration',
+          })
+        );
+
+        // Store session
+        const expiresAt =
+          Date.now() + (this.config.sessionDuration || 3600) * 1000;
+        this.sessions.set(sessionId, { token, expiresAt });
+
+        // Clean up expired sessions
+        this.cleanupExpiredSessions();
+
+        return {
+          success: true,
+          token,
+          sessionId,
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          code: BiometricErrorCode.AUTHENTICATION_FAILED,
+          message: 'Failed to create credential',
+        },
+      };
+    } catch (error) {
+      return this.handleWebAuthnError(error);
+    }
+  }
+
+  private async registerWithWebAuthnOptions(
+    options: BiometricAuthOptions
+  ): Promise<BiometricAuthResult> {
+    try {
+      // Use the provided WebAuthn options directly
+      const createOptions = mergeCreateOptions(options.webAuthnOptions?.create);
+
+      // Create the credential
+      const credential = (await navigator.credentials.create({
+        publicKey: createOptions,
+      })) as PublicKeyCredential;
+
+      if (
+        credential &&
+        credential.response instanceof AuthenticatorAttestationResponse
+      ) {
+        // Store credential ID for future authentication
+        const credentialId = arrayBufferToBase64(credential.rawId);
+        const userId = options?.webAuthnOptions?.create?.user?.name;
+        storeCredentialId(credentialId, userId);
+
+        // Create enhanced token with credential data for backend verification
+        const credentialData = {
+          id: credential.id,
+          rawId: arrayBufferToBase64(credential.rawId),
+          response: {
+            attestationObject: arrayBufferToBase64(
+              credential.response.attestationObject
+            ),
+            clientDataJSON: arrayBufferToBase64(
+              credential.response.clientDataJSON
+            ),
+            transports: credential.response.getTransports?.() || [],
+          },
+          type: credential.type,
+          clientExtensionResults: JSON.stringify(
+            credential.getClientExtensionResults?.() || {}
+          ),
+          authenticatorAttachment: (credential as any).authenticatorAttachment,
+        };
+
+        // Generate session token
+        const sessionId = crypto.randomUUID();
+        const token = btoa(
+          JSON.stringify({
+            credentialId,
+            timestamp: Date.now(),
+            sessionId,
+            type: 'registration',
+            credentialData, // Include full credential data
           })
         );
 
