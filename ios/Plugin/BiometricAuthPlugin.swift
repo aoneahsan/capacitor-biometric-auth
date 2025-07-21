@@ -18,6 +18,65 @@ public class BiometricAuthPlugin: CAPPlugin {
     private var maxAttempts = 3
     private var lockoutDuration: TimeInterval = 30 // 30 seconds
     
+    // Base64URL utilities for WebAuthn compatibility
+    private func base64UrlEncode(_ data: Data) -> String {
+        return data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+    
+    private func base64UrlDecode(_ string: String) -> Data? {
+        var base64 = string
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        
+        // Add padding if needed
+        while base64.count % 4 != 0 {
+            base64 += "="
+        }
+        
+        return Data(base64Encoded: base64)
+    }
+    
+    private func createEnhancedToken(credentialId: String, type: String, credentialData: [String: Any]? = nil) -> String {
+        var tokenPayload: [String: Any] = [
+            "credentialId": credentialId,
+            "timestamp": Date().timeIntervalSince1970 * 1000,
+            "sessionId": UUID().uuidString,
+            "type": type
+        ]
+        
+        if let credentialData = credentialData {
+            tokenPayload["credentialData"] = credentialData
+        }
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: tokenPayload)
+            return jsonData.base64EncodedString()
+        } catch {
+            print("Failed to create enhanced token: \(error)")
+            return UUID().uuidString // Fallback to simple token
+        }
+    }
+    
+    private func createClientDataJSON(type: String, challenge: String) -> String {
+        let clientData: [String: Any] = [
+            "type": type,
+            "challenge": Data(challenge.utf8).base64EncodedString(),
+            "origin": "ios-app://com.yourapp.bundle", // Should be configurable
+            "crossOrigin": false
+        ]
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: clientData)
+            return String(data: jsonData, encoding: .utf8) ?? "{}"
+        } catch {
+            print("Failed to create client data JSON: \(error)")
+            return "{}"
+        }
+    }
+    
     @objc func isAvailable(_ call: CAPPluginCall) {
         let context = LAContext()
         var error: NSError?
@@ -96,9 +155,28 @@ public class BiometricAuthPlugin: CAPPlugin {
         context.evaluatePolicy(policy, localizedReason: reason) { success, error in
             DispatchQueue.main.async {
                 if success {
-                    // Generate session
+                    // Generate credential data for mobile authentication
+                    let credentialId = "mobile_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
                     let sessionId = UUID().uuidString
-                    let token = UUID().uuidString
+                    
+                    // Create enhanced credential data for backend verification
+                    let credentialData: [String: Any] = [
+                        "id": credentialId,
+                        "rawId": self.base64UrlEncode(credentialId.data(using: .utf8) ?? Data()),
+                        "response": [
+                            "authenticatorData": "", // Empty for mobile (handled by backend)
+                            "clientDataJSON": self.base64UrlEncode(self.createClientDataJSON(type: "webauthn.get", 
+                                challenge: "mobile_auth_\(Int(Date().timeIntervalSince1970 * 1000))").data(using: .utf8) ?? Data()),
+                            "signature": self.base64UrlEncode("mobile_signature_\(sessionId)".data(using: .utf8) ?? Data()),
+                            "userHandle": "" // Will be set by backend
+                        ],
+                        "type": "public-key",
+                        "clientExtensionResults": "{}",
+                        "authenticatorAttachment": "platform"
+                    ]
+                    
+                    // Create enhanced token with credential data
+                    let token = self.createEnhancedToken(credentialId: credentialId, type: "authentication", credentialData: credentialData)
                     
                     // Store session
                     UserDefaults.standard.set(token, forKey: self.SESSION_TOKEN_KEY)
@@ -127,6 +205,92 @@ public class BiometricAuthPlugin: CAPPlugin {
                         case LAError.authenticationFailed.rawValue:
                             errorCode = "authenticationFailed"
                             errorMessage = "Authentication failed"
+                        case LAError.biometryLockout.rawValue:
+                            errorCode = "lockedOut"
+                            errorMessage = "Biometry is locked out"
+                        case LAError.biometryNotAvailable.rawValue:
+                            errorCode = "notAvailable"
+                            errorMessage = "Biometry is not available"
+                        case LAError.biometryNotEnrolled.rawValue:
+                            errorCode = "notEnrolled"
+                            errorMessage = "No biometric data enrolled"
+                        default:
+                            errorMessage = error.localizedDescription
+                        }
+                    }
+                    
+                    call.resolve([
+                        "success": false,
+                        "error": [
+                            "code": errorCode,
+                            "message": errorMessage
+                        ]
+                    ])
+                }
+            }
+        }
+    }
+    
+    @objc func register(_ call: CAPPluginCall) {
+        let context = LAContext()
+        context.localizedCancelTitle = call.getString("cancelButtonTitle") ?? "Cancel"
+        
+        let reason = call.getString("description") ?? call.getString("subtitle") ?? call.getString("title") ?? "Register biometric authentication"
+        
+        let policy: LAPolicy = allowDeviceCredential ? .deviceOwnerAuthentication : .deviceOwnerAuthenticationWithBiometrics
+        
+        context.evaluatePolicy(policy, localizedReason: reason) { success, error in
+            DispatchQueue.main.async {
+                if success {
+                    // Generate credential data for mobile registration
+                    let credentialId = "mobile_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+                    let sessionId = UUID().uuidString
+                    
+                    // Create enhanced credential data for backend verification
+                    let credentialData: [String: Any] = [
+                        "id": credentialId,
+                        "rawId": self.base64UrlEncode(credentialId.data(using: .utf8) ?? Data()),
+                        "response": [
+                            "attestationObject": self.base64UrlEncode("mobile_attestation".data(using: .utf8) ?? Data()),
+                            "clientDataJSON": self.base64UrlEncode(self.createClientDataJSON(type: "webauthn.create", 
+                                challenge: "mobile_registration_\(Int(Date().timeIntervalSince1970 * 1000))").data(using: .utf8) ?? Data()),
+                            "transports": ["internal"]
+                        ],
+                        "type": "public-key",
+                        "clientExtensionResults": "{}",
+                        "authenticatorAttachment": "platform"
+                    ]
+                    
+                    // Create enhanced token with credential data
+                    let token = self.createEnhancedToken(credentialId: credentialId, type: "registration", credentialData: credentialData)
+                    
+                    // Store session
+                    UserDefaults.standard.set(token, forKey: self.SESSION_TOKEN_KEY)
+                    UserDefaults.standard.set(Date().addingTimeInterval(self.sessionDuration), forKey: self.SESSION_EXPIRY_KEY)
+                    
+                    call.resolve([
+                        "success": true,
+                        "sessionId": sessionId,
+                        "token": token
+                    ])
+                } else {
+                    var errorCode = "unknown"
+                    var errorMessage = "Registration failed"
+                    
+                    if let error = error as NSError? {
+                        switch error.code {
+                        case LAError.userCancel.rawValue:
+                            errorCode = "userCancelled"
+                            errorMessage = "User cancelled registration"
+                        case LAError.userFallback.rawValue:
+                            errorCode = "userCancelled"
+                            errorMessage = "User chose fallback"
+                        case LAError.systemCancel.rawValue:
+                            errorCode = "systemCancelled"
+                            errorMessage = "System cancelled registration"
+                        case LAError.authenticationFailed.rawValue:
+                            errorCode = "authenticationFailed"
+                            errorMessage = "Registration failed"
                         case LAError.biometryLockout.rawValue:
                             errorCode = "lockedOut"
                             errorMessage = "Biometry is locked out"

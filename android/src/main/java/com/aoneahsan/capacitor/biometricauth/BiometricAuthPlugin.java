@@ -105,6 +105,54 @@ public class BiometricAuthPlugin extends Plugin {
         }
     }
     
+    // Base64URL utilities for WebAuthn compatibility
+    private String base64UrlEncode(byte[] data) {
+        return Base64.encodeToString(data, Base64.NO_WRAP | Base64.URL_SAFE | Base64.NO_PADDING);
+    }
+    
+    private byte[] base64UrlDecode(String data) {
+        // Add padding if needed
+        String padded = data;
+        while (padded.length() % 4 != 0) {
+            padded += "=";
+        }
+        return Base64.decode(padded, Base64.URL_SAFE);
+    }
+    
+    private String createEnhancedToken(String credentialId, String type, JSObject credentialData) {
+        try {
+            JSONObject tokenPayload = new JSONObject();
+            tokenPayload.put("credentialId", credentialId);
+            tokenPayload.put("timestamp", System.currentTimeMillis());
+            tokenPayload.put("sessionId", UUID.randomUUID().toString());
+            tokenPayload.put("type", type);
+            
+            if (credentialData != null) {
+                tokenPayload.put("credentialData", new JSONObject(credentialData.toString()));
+            }
+            
+            String tokenJson = tokenPayload.toString();
+            return Base64.encodeToString(tokenJson.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to create enhanced token", e);
+            return UUID.randomUUID().toString(); // Fallback to simple token
+        }
+    }
+    
+    private String createClientDataJSON(String type, String challenge) {
+        try {
+            JSONObject clientData = new JSONObject();
+            clientData.put("type", type);
+            clientData.put("challenge", Base64.encodeToString(challenge.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP));
+            clientData.put("origin", "android-app://com.yourapp.package"); // Should be configurable
+            clientData.put("crossOrigin", false);
+            return clientData.toString();
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to create client data JSON", e);
+            return "{}";
+        }
+    }
+    
     @PluginMethod
     public void isAvailable(PluginCall call) {
         Context context = getContext();
@@ -241,9 +289,29 @@ public class BiometricAuthPlugin extends Plugin {
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult authResult) {
                 super.onAuthenticationSucceeded(authResult);
                 
-                // Generate session token
+                // Generate credential data for mobile authentication
+                String credentialId = "mobile_" + UUID.randomUUID().toString().replace("-", "");
                 String sessionId = UUID.randomUUID().toString();
-                String token = UUID.randomUUID().toString();
+                
+                // Create enhanced credential data for backend verification
+                JSObject credentialData = new JSObject();
+                credentialData.put("id", credentialId);
+                credentialData.put("rawId", base64UrlEncode(credentialId.getBytes(StandardCharsets.UTF_8)));
+                
+                JSObject response = new JSObject();
+                response.put("authenticatorData", ""); // Empty for mobile (handled by backend)
+                response.put("clientDataJSON", base64UrlEncode(createClientDataJSON("webauthn.get", 
+                    "mobile_auth_" + System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8)));
+                response.put("signature", base64UrlEncode(("mobile_signature_" + sessionId).getBytes(StandardCharsets.UTF_8)));
+                response.put("userHandle", ""); // Will be set by backend
+                
+                credentialData.put("response", response);
+                credentialData.put("type", "public-key");
+                credentialData.put("clientExtensionResults", "{}");
+                credentialData.put("authenticatorAttachment", "platform");
+                
+                // Create enhanced token with credential data
+                String token = createEnhancedToken(credentialId, "authentication", credentialData);
                 
                 // Store session
                 SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -278,6 +346,124 @@ public class BiometricAuthPlugin extends Plugin {
         } else {
             builder.setDeviceCredentialAllowed(true);
         }
+        
+        promptInfo = builder.build();
+        
+        // Show biometric prompt
+        activity.runOnUiThread(() -> {
+            biometricPrompt.authenticate(promptInfo);
+        });
+    }
+    
+    @PluginMethod
+    public void register(PluginCall call) {
+        // For mobile registration, we use the same biometric authentication flow
+        // but mark the token as "registration" type
+        Activity activity = getActivity();
+        if (!(activity instanceof FragmentActivity)) {
+            call.reject("Activity must be a FragmentActivity");
+            return;
+        }
+        
+        FragmentActivity fragmentActivity = (FragmentActivity) activity;
+        
+        // Get options
+        String title = call.getString("title", "Register Biometric");
+        String subtitle = call.getString("subtitle", "");
+        String description = call.getString("description", "");
+        String cancelButtonTitle = call.getString("cancelButtonTitle", "Cancel");
+        
+        // Create executor
+        Executor executor = ContextCompat.getMainExecutor(activity);
+        
+        // Create registration callback
+        biometricPrompt = new BiometricPrompt(fragmentActivity, executor, new BiometricPrompt.AuthenticationCallback() {
+            @Override
+            public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                super.onAuthenticationError(errorCode, errString);
+                
+                JSObject result = new JSObject();
+                result.put("success", false);
+                
+                JSObject error = new JSObject();
+                switch (errorCode) {
+                    case BiometricPrompt.ERROR_USER_CANCELED:
+                        error.put("code", "userCancelled");
+                        break;
+                    case BiometricPrompt.ERROR_LOCKOUT:
+                        error.put("code", "lockedOut");
+                        break;
+                    case BiometricPrompt.ERROR_TIMEOUT:
+                        error.put("code", "timeout");
+                        break;
+                    default:
+                        error.put("code", "authenticationFailed");
+                        break;
+                }
+                error.put("message", errString.toString());
+                
+                result.put("error", error);
+                call.resolve(result);
+            }
+            
+            @Override
+            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult authResult) {
+                super.onAuthenticationSucceeded(authResult);
+                
+                // Generate credential data for mobile registration
+                String credentialId = "mobile_" + UUID.randomUUID().toString().replace("-", "");
+                String sessionId = UUID.randomUUID().toString();
+                
+                // Create enhanced credential data for backend verification
+                JSObject credentialData = new JSObject();
+                credentialData.put("id", credentialId);
+                credentialData.put("rawId", base64UrlEncode(credentialId.getBytes(StandardCharsets.UTF_8)));
+                
+                JSObject response = new JSObject();
+                response.put("attestationObject", base64UrlEncode("mobile_attestation".getBytes(StandardCharsets.UTF_8)));
+                response.put("clientDataJSON", base64UrlEncode(createClientDataJSON("webauthn.create", 
+                    "mobile_registration_" + System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8)));
+                
+                JSONArray transports = new JSONArray();
+                transports.put("internal");
+                response.put("transports", transports);
+                
+                credentialData.put("response", response);
+                credentialData.put("type", "public-key");
+                credentialData.put("clientExtensionResults", "{}");
+                credentialData.put("authenticatorAttachment", "platform");
+                
+                // Create enhanced token with credential data
+                String token = createEnhancedToken(credentialId, "registration", credentialData);
+                
+                // Store session
+                SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(PREF_SESSION_TOKEN, token);
+                editor.putLong(PREF_SESSION_EXPIRY, System.currentTimeMillis() + (sessionDuration * 1000));
+                editor.apply();
+                
+                JSObject result = new JSObject();
+                result.put("success", true);
+                result.put("sessionId", sessionId);
+                result.put("token", token);
+                
+                call.resolve(result);
+            }
+            
+            @Override
+            public void onAuthenticationFailed() {
+                super.onAuthenticationFailed();
+                // Don't resolve here, let the user try again
+            }
+        });
+        
+        // Create prompt info
+        BiometricPrompt.PromptInfo.Builder builder = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setDescription(description)
+                .setNegativeButtonText(cancelButtonTitle);
         
         promptInfo = builder.build();
         
