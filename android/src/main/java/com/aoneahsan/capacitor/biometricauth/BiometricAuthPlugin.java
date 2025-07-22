@@ -334,14 +334,42 @@ public class BiometricAuthPlugin extends Plugin {
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult authResult) {
                 super.onAuthenticationSucceeded(authResult);
                 
-                // Generate credential data for mobile authentication
+                // Extract stored credential information from WebAuthn options if available
                 String credentialId = "mobile_" + UUID.randomUUID().toString().replace("-", "");
+                String credentialRawId = null;
+                String userId = null;
+                
+                // Try to get stored credential info from webAuthnOptions
+                try {
+                    JSObject webAuthnOptions = call.getObject("webAuthnOptions");
+                    if (webAuthnOptions != null) {
+                        JSObject getOptions = webAuthnOptions.getJSObject("get");
+                        if (getOptions != null) {
+                            String storedCredentialId = getOptions.getString("storedCredentialId");
+                            String storedCredentialRawId = getOptions.getString("storedCredentialRawId");
+                            String storedUserId = getOptions.getString("storedUserId");
+                            
+                            if (storedCredentialId != null && !storedCredentialId.isEmpty()) {
+                                credentialId = storedCredentialId;
+                            }
+                            if (storedCredentialRawId != null && !storedCredentialRawId.isEmpty()) {
+                                credentialRawId = storedCredentialRawId;
+                            }
+                            if (storedUserId != null && !storedUserId.isEmpty()) {
+                                userId = storedUserId;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "Could not extract stored credential info, using generated values", e);
+                }
+                
                 String sessionId = UUID.randomUUID().toString();
                 
                 // Create enhanced credential data for backend verification
                 JSObject credentialData = new JSObject();
                 credentialData.put("id", credentialId);
-                credentialData.put("rawId", base64UrlEncode(credentialId.getBytes(StandardCharsets.UTF_8)));
+                credentialData.put("rawId", credentialRawId != null ? credentialRawId : base64UrlEncode(credentialId.getBytes(StandardCharsets.UTF_8)));
                 
                 JSObject response = new JSObject();
                 response.put("authenticatorData", ""); // Empty for mobile (handled by backend)
@@ -350,8 +378,8 @@ public class BiometricAuthPlugin extends Plugin {
                 String challengeToUse = finalChallenge != null ? finalChallenge : "mobile_auth_" + System.currentTimeMillis();
                 response.put("clientDataJSON", base64UrlEncode(createClientDataJSON("webauthn.get", 
                     challengeToUse).getBytes(StandardCharsets.UTF_8)));
-                response.put("signature", base64UrlEncode(("mobile_signature_" + sessionId).getBytes(StandardCharsets.UTF_8)));
-                response.put("userHandle", ""); // Will be set by backend
+                response.put("signature", base64UrlEncode("mobile_signature".getBytes(StandardCharsets.UTF_8)));
+                response.put("userHandle", userId != null ? base64UrlEncode(userId.getBytes(StandardCharsets.UTF_8)) : "");
                 
                 credentialData.put("response", response);
                 credentialData.put("type", "public-key");

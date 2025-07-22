@@ -208,6 +208,21 @@ export interface WebAuthnGetOptions {
    * Hints for user agent UI
    */
   hints?: Array<'security-key' | 'client-device' | 'hybrid'>;
+  /**
+   * Stored credential ID for mobile authentication
+   * @platform mobile
+   */
+  storedCredentialId?: string;
+  /**
+   * Stored credential raw ID for mobile authentication
+   * @platform mobile
+   */
+  storedCredentialRawId?: string;
+  /**
+   * Stored user ID for mobile authentication
+   * @platform mobile
+   */
+  storedUserId?: string;
 }
 
 export interface AndroidBiometricOptions {
@@ -238,7 +253,11 @@ export interface AndroidBiometricOptions {
   /**
    * Algorithm to use for signature operations
    */
-  signatureAlgorithm?: 'SHA256withRSA' | 'SHA256withECDSA' | 'SHA512withRSA' | 'SHA512withECDSA';
+  signatureAlgorithm?:
+    | 'SHA256withRSA'
+    | 'SHA256withECDSA'
+    | 'SHA512withRSA'
+    | 'SHA512withECDSA';
   /**
    * Key size for key generation
    */

@@ -198,8 +198,25 @@ public class BiometricAuthPlugin: CAPPlugin {
         context.evaluatePolicy(policy, localizedReason: reason) { success, error in
             DispatchQueue.main.async {
                 if success {
-                    // Generate credential data for mobile authentication
-                    let credentialId = "mobile_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+                    // Extract stored credential information from WebAuthn options if available
+                    var credentialId = "mobile_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+                    var credentialRawId: String? = nil
+                    var userId: String? = nil
+                    
+                    // Try to get stored credential info from webAuthnOptions
+                    if let webAuthnOptions = call.getObject("webAuthnOptions"),
+                       let getOptions = webAuthnOptions["get"] as? [String: Any] {
+                        if let storedCredentialId = getOptions["storedCredentialId"] as? String, !storedCredentialId.isEmpty {
+                            credentialId = storedCredentialId
+                        }
+                        if let storedCredentialRawId = getOptions["storedCredentialRawId"] as? String, !storedCredentialRawId.isEmpty {
+                            credentialRawId = storedCredentialRawId
+                        }
+                        if let storedUserId = getOptions["storedUserId"] as? String, !storedUserId.isEmpty {
+                            userId = storedUserId
+                        }
+                    }
+                    
                     let sessionId = UUID().uuidString
                     
                     // Use the WebAuthn challenge if provided, otherwise fallback to timestamp
@@ -208,13 +225,13 @@ public class BiometricAuthPlugin: CAPPlugin {
                     // Create enhanced credential data for backend verification
                     let credentialData: [String: Any] = [
                         "id": credentialId,
-                        "rawId": self.base64UrlEncode(credentialId.data(using: .utf8) ?? Data()),
+                        "rawId": credentialRawId ?? self.base64UrlEncode(credentialId.data(using: .utf8) ?? Data()),
                         "response": [
                             "authenticatorData": "", // Empty for mobile (handled by backend)
                             "clientDataJSON": self.base64UrlEncode(self.createClientDataJSON(type: "webauthn.get", 
                                 challenge: challengeToUse).data(using: .utf8) ?? Data()),
-                            "signature": self.base64UrlEncode("mobile_signature_\(sessionId)".data(using: .utf8) ?? Data()),
-                            "userHandle": "" // Will be set by backend
+                            "signature": self.base64UrlEncode("mobile_signature".data(using: .utf8) ?? Data()),
+                            "userHandle": userId != nil ? self.base64UrlEncode(userId!.data(using: .utf8) ?? Data()) : ""
                         ],
                         "type": "public-key",
                         "clientExtensionResults": "{}",
