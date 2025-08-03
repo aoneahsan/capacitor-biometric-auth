@@ -68,10 +68,10 @@ export { CapacitorAdapter } from './adapters/CapacitorAdapter';
 
 // For backward compatibility with Capacitor plugin registration
 if (typeof window !== 'undefined') {
-  const { Capacitor } = (window as any);
-  if (Capacitor) {
+  const capacitorGlobal = (window as unknown as { Capacitor?: { registerPlugin?: (name: string, options: unknown) => void } });
+  if (capacitorGlobal.Capacitor?.registerPlugin) {
     // Register as a Capacitor plugin for backward compatibility
-    const { registerPlugin } = Capacitor;
+    const { registerPlugin } = capacitorGlobal.Capacitor;
     if (registerPlugin) {
       try {
         // Create a Capacitor-compatible plugin interface
@@ -98,7 +98,7 @@ if (typeof window !== 'undefined') {
         registerPlugin('BiometricAuth', {
           web: BiometricAuthPlugin
         });
-      } catch (e) {
+      } catch {
         // Ignore registration errors - not critical
       }
     }

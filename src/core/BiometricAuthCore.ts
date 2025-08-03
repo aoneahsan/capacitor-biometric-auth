@@ -40,7 +40,7 @@ export class BiometricAuthCore {
     const platformInfo = this.platformDetector.detect();
     
     if (this.config.debug) {
-      console.log('[BiometricAuth] Platform detected:', platformInfo);
+      console.warn('[BiometricAuth] Platform detected:', platformInfo);
     }
 
     // Load adapter based on platform
@@ -79,7 +79,7 @@ export class BiometricAuthCore {
             try {
               const { ReactNativeAdapter } = await import('../adapters/ReactNativeAdapter');
               this.currentAdapter = new ReactNativeAdapter();
-            } catch (e) {
+            } catch {
               throw new Error('React Native biometric module not installed. Please install react-native-biometrics');
             }
           }
@@ -95,7 +95,7 @@ export class BiometricAuthCore {
       }
     } catch (error) {
       if (this.config.debug) {
-        console.error('[BiometricAuth] Failed to load adapter:', error);
+        console.warn('[BiometricAuth] Failed to load adapter:', error);
       }
       
       // Fallback to web adapter if available
@@ -128,7 +128,7 @@ export class BiometricAuthCore {
       return await this.currentAdapter.isAvailable();
     } catch (error) {
       if (this.config.debug) {
-        console.error('[BiometricAuth] isAvailable error:', error);
+        console.warn('[BiometricAuth] isAvailable error:', error);
       }
       return false;
     }
@@ -143,7 +143,7 @@ export class BiometricAuthCore {
       return await this.currentAdapter.getSupportedBiometrics();
     } catch (error) {
       if (this.config.debug) {
-        console.error('[BiometricAuth] getSupportedBiometrics error:', error);
+        console.warn('[BiometricAuth] getSupportedBiometrics error:', error);
       }
       return [];
     }
@@ -223,7 +223,7 @@ export class BiometricAuthCore {
       return await this.currentAdapter.hasCredentials();
     } catch (error) {
       if (this.config.debug) {
-        console.error('[BiometricAuth] hasCredentials error:', error);
+        console.warn('[BiometricAuth] hasCredentials error:', error);
       }
       return false;
     }

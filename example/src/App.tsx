@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { BiometricAuth } from '../../src';
+import React, { useState, useEffect } from 'react';
+import BiometricAuth from '../../src';
 import type {
   BiometricAuthResult,
-  BiometricAvailabilityResult,
-  SupportedBiometricsResult,
+  BiometricAuthState,
+  BiometryType,
 } from '../../src';
 
 const App: React.FC = () => {

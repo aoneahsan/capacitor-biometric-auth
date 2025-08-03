@@ -52,7 +52,7 @@ export interface BiometricAuthResult {
 export interface BiometricError {
   code: BiometricErrorCode;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 export enum BiometricErrorCode {

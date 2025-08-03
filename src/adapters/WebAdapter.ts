@@ -29,7 +29,7 @@ export class WebAdapter implements BiometricAuthAdapter {
     try {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       return available;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -135,7 +135,7 @@ export class WebAdapter implements BiometricAuthAdapter {
       }) as PublicKeyCredential;
 
       return credential;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -175,12 +175,12 @@ export class WebAdapter implements BiometricAuthAdapter {
       }) as PublicKeyCredential;
 
       return credential;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
 
-  private handleError(error: any): BiometricAuthResult {
+  private handleError(error: unknown): BiometricAuthResult {
     let code = BiometricErrorCode.UNKNOWN_ERROR;
     let message = 'An unknown error occurred';
 

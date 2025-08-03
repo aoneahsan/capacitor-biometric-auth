@@ -168,7 +168,7 @@ export interface WebAuthnCreateOptions {
   /**
    * Extension inputs
    */
-  extensions?: Record<string, any>;
+  extensions?: Record<string, unknown>;
   /**
    * Hints for user agent UI
    */
@@ -203,7 +203,7 @@ export interface WebAuthnGetOptions {
   /**
    * Extension inputs
    */
-  extensions?: Record<string, any>;
+  extensions?: Record<string, unknown>;
   /**
    * Hints for user agent UI
    */

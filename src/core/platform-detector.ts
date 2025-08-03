@@ -34,9 +34,10 @@ export class PlatformDetector {
       info.isWeb = true;
 
       // Check for Capacitor
-      if ((window as any).Capacitor) {
+      if ((window as unknown as { Capacitor?: unknown }).Capacitor) {
         info.isCapacitor = true;
-        const platform = (window as any).Capacitor.getPlatform?.();
+        const capacitor = (window as unknown as { Capacitor?: { getPlatform?: () => string } }).Capacitor;
+        const platform = capacitor?.getPlatform?.();
         if (platform) {
           info.name = platform;
           info.isIOS = platform === 'ios';
@@ -45,21 +46,21 @@ export class PlatformDetector {
         }
       }
       // Check for Cordova
-      else if ((window as any).cordova || (window as any).phonegap) {
+      else if ((window as unknown as { cordova?: unknown; phonegap?: unknown }).cordova || (window as unknown as { cordova?: unknown; phonegap?: unknown }).phonegap) {
         info.isCordova = true;
         info.name = 'cordova';
         
-        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+        const userAgent = navigator.userAgent || navigator.vendor || (window as unknown as { opera?: string }).opera || '';
         if (/android/i.test(userAgent)) {
           info.isAndroid = true;
           info.name = 'android';
-        } else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
+        } else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream) {
           info.isIOS = true;
           info.name = 'ios';
         }
       }
       // Check for Electron
-      else if ((window as any).process?.type === 'renderer' || navigator.userAgent.indexOf('Electron') !== -1) {
+      else if ((window as unknown as { process?: { type?: string } }).process?.type === 'renderer' || navigator.userAgent.indexOf('Electron') !== -1) {
         info.isElectron = true;
         info.name = 'electron';
       }
@@ -69,19 +70,20 @@ export class PlatformDetector {
       }
     }
     // Check for React Native
-    else if (typeof global !== 'undefined' && (global as any).nativePerformanceNow) {
+    else if (typeof global !== 'undefined' && (global as unknown as { nativePerformanceNow?: unknown }).nativePerformanceNow) {
       info.isReactNative = true;
       info.name = 'react-native';
       
       // Try to detect platform in React Native
       try {
-        const { Platform } = require('react-native');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+        const { Platform } = require('react-native') as any;
         if (Platform) {
           info.name = Platform.OS;
           info.isIOS = Platform.OS === 'ios';
           info.isAndroid = Platform.OS === 'android';
         }
-      } catch (e) {
+      } catch {
         // React Native not available
       }
     }
@@ -91,13 +93,17 @@ export class PlatformDetector {
     }
 
     // Get version info if available
-    if (info.isCapacitor && (window as any).Capacitor?.version) {
-      info.version = (window as any).Capacitor.version;
+    if (info.isCapacitor && typeof window !== 'undefined') {
+      const capacitor = (window as unknown as { Capacitor?: { version?: string } }).Capacitor;
+      if (capacitor?.version) {
+        info.version = capacitor.version;
+      }
     } else if (info.isReactNative) {
       try {
-        const { Platform } = require('react-native');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+        const { Platform } = require('react-native') as any;
         info.version = Platform.Version;
-      } catch (e) {
+      } catch {
         // Ignore
       }
     }

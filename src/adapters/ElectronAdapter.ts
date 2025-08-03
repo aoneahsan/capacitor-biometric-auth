@@ -20,14 +20,16 @@ export class ElectronAdapter implements BiometricAuthAdapter {
       if (typeof process !== 'undefined' && process.versions && process.versions.electron) {
         // In Electron, we can use TouchID on macOS
         if (process.platform === 'darwin') {
-          const { systemPreferences } = require('electron').remote || require('electron');
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const electronModule = require('electron');
+          const { systemPreferences } = electronModule.remote || electronModule;
           return systemPreferences.canPromptTouchID();
         }
         // Windows Hello support could be added here
         return false;
       }
       return false;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -58,7 +60,9 @@ export class ElectronAdapter implements BiometricAuthAdapter {
       }
 
       if (process.platform === 'darwin') {
-        const { systemPreferences } = require('electron').remote || require('electron');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const electronModule = require('electron');
+        const { systemPreferences } = electronModule.remote || electronModule;
         
         try {
           await systemPreferences.promptTouchID(
@@ -71,7 +75,7 @@ export class ElectronAdapter implements BiometricAuthAdapter {
             sessionId: this.generateSessionId(),
             platform: 'electron'
           };
-        } catch (error) {
+        } catch {
           return {
             success: false,
             error: {
@@ -108,7 +112,7 @@ export class ElectronAdapter implements BiometricAuthAdapter {
     return await this.isAvailable();
   }
 
-  private mapError(error: any): BiometricError {
+  private mapError(error: unknown): BiometricError {
     let code = BiometricErrorCode.UNKNOWN_ERROR;
     let message = 'An unknown error occurred';
 

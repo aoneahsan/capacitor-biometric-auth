@@ -9,23 +9,29 @@ import {
 
 export class ReactNativeAdapter implements BiometricAuthAdapter {
   platform = 'react-native';
-  private biometrics: any;
+  private biometrics: unknown;
 
   constructor() {
     // Biometrics module will be loaded dynamically
   }
 
-  private async getBiometrics() {
+  private async getBiometrics(): Promise<{
+    isSensorAvailable: () => Promise<{ available: boolean; biometryType?: string; error?: string }>;
+    createSignature: (options: { promptMessage: string; cancelButtonText: string; payload: string }) => Promise<{ success: boolean; signature?: string; error?: string }>;
+    deleteKeys: () => Promise<void>;
+    biometricKeysExist: () => Promise<{ keysExist: boolean }>;
+  }> {
     if (this.biometrics) {
-      return this.biometrics;
+      return this.biometrics as ReturnType<ReactNativeAdapter['getBiometrics']>;
     }
 
     try {
       // Dynamic import for React Native biometrics
-      const ReactNativeBiometrics = require('react-native-biometrics').default;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+      const ReactNativeBiometrics = (require('react-native-biometrics') as any).default;
       this.biometrics = new ReactNativeBiometrics();
-      return this.biometrics;
-    } catch (error) {
+      return this.biometrics as ReturnType<ReactNativeAdapter['getBiometrics']>;
+    } catch {
       throw new Error(
         'React Native Biometrics not installed. Please run: npm install react-native-biometrics'
       );
@@ -37,7 +43,7 @@ export class ReactNativeAdapter implements BiometricAuthAdapter {
       const biometrics = await this.getBiometrics();
       const { available } = await biometrics.isSensorAvailable();
       return available;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -63,7 +69,7 @@ export class ReactNativeAdapter implements BiometricAuthAdapter {
         default:
           return [BiometryType.UNKNOWN];
       }
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -117,7 +123,7 @@ export class ReactNativeAdapter implements BiometricAuthAdapter {
     try {
       const biometrics = await this.getBiometrics();
       await biometrics.deleteKeys();
-    } catch (error) {
+    } catch {
       // Ignore errors when deleting credentials
     }
   }
@@ -127,7 +133,7 @@ export class ReactNativeAdapter implements BiometricAuthAdapter {
       const biometrics = await this.getBiometrics();
       const { keysExist } = await biometrics.biometricKeysExist();
       return keysExist;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -150,7 +156,7 @@ export class ReactNativeAdapter implements BiometricAuthAdapter {
     }
   }
 
-  private mapError(error: any): BiometricError {
+  private mapError(error: unknown): BiometricError {
     let code = BiometricErrorCode.UNKNOWN_ERROR;
     let message = 'An unknown error occurred';
 

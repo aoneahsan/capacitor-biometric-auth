@@ -1,7 +1,7 @@
 {
   "name": "capacitor-biometric-authentication",
   "version": "1.4.2",
-  "description": "Biometric Authentication Plugin for Capacitor",
+  "description": "Framework-agnostic biometric authentication library. Works with React, Vue, Angular, or vanilla JS. No providers required!",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -74,6 +74,7 @@
     "@capacitor/android": "^7.4.2",
     "@capacitor/core": "^7.4.2",
     "@capacitor/ios": "^7.4.2",
+    "@eslint/js": "^9.32.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@types/node": "^24.0.15",

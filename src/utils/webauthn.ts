@@ -33,7 +33,7 @@ export function toArrayBuffer(
         bytes[i] = binaryString.charCodeAt(i);
       }
       return bytes.buffer;
-    } catch (e) {
+    } catch {
       try {
         // Fallback to regular base64 decoding
         const binaryString = atob(data);
@@ -42,7 +42,7 @@ export function toArrayBuffer(
           bytes[i] = binaryString.charCodeAt(i);
         }
         return bytes.buffer;
-      } catch (e2) {
+      } catch {
         // If both fail, encode as UTF-8
         return new TextEncoder().encode(data).buffer;
       }
@@ -135,7 +135,7 @@ export function mergeCreateOptions(
   }
 
   if (userOptions?.attestationFormats) {
-    (options as any).attestationFormats = userOptions.attestationFormats;
+    (options as { attestationFormats?: string[] }).attestationFormats = userOptions.attestationFormats;
   }
 
   if (userOptions?.excludeCredentials) {
@@ -150,7 +150,7 @@ export function mergeCreateOptions(
   }
 
   if (userOptions?.hints) {
-    (options as any).hints = userOptions.hints;
+    (options as { hints?: string[] }).hints = userOptions.hints;
   }
 
   return options;
@@ -199,7 +199,7 @@ export function mergeGetOptions(
   }
 
   if (userOptions?.hints) {
-    (options as any).hints = userOptions.hints;
+    (options as { hints?: string[] }).hints = userOptions.hints;
   }
 
   return options;

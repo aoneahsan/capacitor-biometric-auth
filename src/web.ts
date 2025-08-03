@@ -184,7 +184,7 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
           clientExtensionResults: JSON.stringify(
             credential.getClientExtensionResults?.() || {}
           ),
-          authenticatorAttachment: (credential as any).authenticatorAttachment,
+          authenticatorAttachment: (credential as { authenticatorAttachment?: string }).authenticatorAttachment,
         };
 
         const token = btoa(
@@ -422,7 +422,7 @@ export class BiometricAuthWeb extends WebPlugin implements BiometricAuthPlugin {
           clientExtensionResults: JSON.stringify(
             credential.getClientExtensionResults?.() || {}
           ),
-          authenticatorAttachment: (credential as any).authenticatorAttachment,
+          authenticatorAttachment: (credential as { authenticatorAttachment?: string }).authenticatorAttachment,
         };
 
         // Generate session token
