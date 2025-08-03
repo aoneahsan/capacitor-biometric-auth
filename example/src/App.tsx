@@ -9,19 +9,26 @@ import type {
 const App: React.FC = () => {
   const [status, setStatus] = useState<string>('');
   const [result, setResult] = useState<BiometricAuthResult | null>(null);
-  const [availability, setAvailability] =
-    useState<BiometricAvailabilityResult | null>(null);
-  const [supportedBiometrics, setSupportedBiometrics] =
-    useState<SupportedBiometricsResult | null>(null);
+  const [isAvailable, setIsAvailable] = useState<boolean>(false);
+  const [supportedBiometrics, setSupportedBiometrics] = useState<BiometryType[]>([]);
+  const [authState, setAuthState] = useState<BiometricAuthState | null>(null);
+
+  // Subscribe to auth state changes
+  useEffect(() => {
+    const unsubscribe = BiometricAuth.subscribe((state) => {
+      setAuthState(state);
+    });
+    return unsubscribe;
+  }, []);
 
   const checkAvailability = async () => {
     try {
-      const result = await BiometricAuth.isAvailable();
-      setAvailability(result);
+      const available = await BiometricAuth.isAvailable();
+      setIsAvailable(available);
       setStatus(
-        result.available
+        available
           ? 'Biometric authentication is available'
-          : `Not available: ${result.reason}`
+          : 'Biometric authentication is not available'
       );
     } catch (error) {
       setStatus(`Error: ${error}`);
@@ -30,9 +37,9 @@ const App: React.FC = () => {
 
   const getSupportedBiometrics = async () => {
     try {
-      const result = await BiometricAuth.getSupportedBiometrics();
-      setSupportedBiometrics(result);
-      setStatus(`Supported biometrics: ${result.biometrics.join(', ')}`);
+      const biometrics = await BiometricAuth.getSupportedBiometrics();
+      setSupportedBiometrics(biometrics);
+      setStatus(`Supported biometrics: ${biometrics.join(', ')}`);
     } catch (error) {
       setStatus(`Error: ${error}`);
     }
@@ -42,12 +49,9 @@ const App: React.FC = () => {
     try {
       setStatus('Authenticating...');
       const result = await BiometricAuth.authenticate({
-        title: 'Biometric Authentication',
-        subtitle: 'Authenticate to access your account',
-        description: 'Place your finger on the sensor or look at the camera',
-        fallbackButtonTitle: 'Use Passcode',
-        cancelButtonTitle: 'Cancel',
-        saveCredentials: true,
+        reason: 'Authenticate to access your account',
+        cancelTitle: 'Cancel',
+        fallbackTitle: 'Use Passcode',
       });
 
       setResult(result);
@@ -71,21 +75,22 @@ const App: React.FC = () => {
     }
   };
 
-  const configurePlugin = async () => {
+  const configurePlugin = () => {
     try {
-      await BiometricAuth.configure({
-        sessionDuration: 7200, // 2 hours
-        requireAuthenticationForEveryAccess: false,
-        uiConfig: {
-          primaryColor: '#007AFF',
-          backgroundColor: '#FFFFFF',
-          textColor: '#000000',
-        },
+      BiometricAuth.configure({
+        sessionDuration: 7200000, // 2 hours in ms
+        debug: true,
       });
       setStatus('Plugin configured successfully');
     } catch (error) {
       setStatus(`Error: ${error}`);
     }
+  };
+
+  const logout = () => {
+    BiometricAuth.logout();
+    setStatus('Logged out successfully');
+    setResult(null);
   };
 
   return (
@@ -138,22 +143,35 @@ const App: React.FC = () => {
           >
             Delete Credentials
           </button>
+          <button
+            onClick={logout}
+            style={{ ...buttonStyle, backgroundColor: '#FF9800' }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
-      {availability && (
+      {isAvailable !== null && (
         <div style={{ marginBottom: '20px' }}>
           <h2>Availability</h2>
-          <pre style={codeStyle}>{JSON.stringify(availability, null, 2)}</pre>
+          <pre style={codeStyle}>{JSON.stringify({ available: isAvailable }, null, 2)}</pre>
         </div>
       )}
 
-      {supportedBiometrics && (
+      {supportedBiometrics.length > 0 && (
         <div style={{ marginBottom: '20px' }}>
           <h2>Supported Biometrics</h2>
           <pre style={codeStyle}>
-            {JSON.stringify(supportedBiometrics, null, 2)}
+            {JSON.stringify({ biometrics: supportedBiometrics }, null, 2)}
           </pre>
+        </div>
+      )}
+
+      {authState && (
+        <div style={{ marginBottom: '20px' }}>
+          <h2>Authentication State</h2>
+          <pre style={codeStyle}>{JSON.stringify(authState, null, 2)}</pre>
         </div>
       )}
 
