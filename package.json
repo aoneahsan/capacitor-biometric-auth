@@ -15,8 +15,20 @@
     "android/proguard-rules.pro",
     "dist/",
     "ios/Plugin/",
-    "CapacitorBiometricAuthentication.podspec"
+    "CapacitorBiometricAuthentication.podspec",
+    "src/"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/plugin.cjs.js",
+      "types": "./dist/esm/index.d.ts"
+    },
+    "./web": {
+      "import": "./dist/web.js",
+      "types": "./dist/esm/index.d.ts"
+    }
+  },
   "author": {
     "email": "aoneahsan@gmail.com",
     "name": "Ahsan Mahmood (Aoneahsan)",
@@ -30,6 +42,7 @@
   "bugs": {
     "url": "https://github.com/aoneahsan/capacitor-biometric-authentication/issues"
   },
+  "type": "module",
   "keywords": [
     "capacitor",
     "plugin",
@@ -39,7 +52,13 @@
     "fingerprint",
     "face-id",
     "touch-id",
-    "webauthn"
+    "webauthn",
+    "react",
+    "react-native",
+    "cordova",
+    "web",
+    "provider-less",
+    "framework-agnostic"
   ],
   "scripts": {
     "build": "npm run clean && npm run tsc && rollup -c rollup.config.js",
@@ -68,6 +87,11 @@
   },
   "peerDependencies": {
     "@capacitor/core": "^7.4.2"
+  },
+  "peerDependenciesMeta": {
+    "@capacitor/core": {
+      "optional": true
+    }
   },
   "capacitor": {
     "ios": {
