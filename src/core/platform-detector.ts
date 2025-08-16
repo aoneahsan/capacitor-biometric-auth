@@ -69,24 +69,6 @@ export class PlatformDetector {
         info.name = 'web';
       }
     }
-    // Check for React Native
-    else if (typeof global !== 'undefined' && (global as unknown as { nativePerformanceNow?: unknown }).nativePerformanceNow) {
-      info.isReactNative = true;
-      info.name = 'react-native';
-      
-      // Try to detect platform in React Native
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-        const { Platform } = require('react-native') as any;
-        if (Platform) {
-          info.name = Platform.OS;
-          info.isIOS = Platform.OS === 'ios';
-          info.isAndroid = Platform.OS === 'android';
-        }
-      } catch {
-        // React Native not available
-      }
-    }
     // Node.js environment
     else if (typeof process !== 'undefined' && process.versions && process.versions.node) {
       info.name = 'node';
@@ -98,14 +80,6 @@ export class PlatformDetector {
       if (capacitor?.version) {
         info.version = capacitor.version;
       }
-    } else if (info.isReactNative) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-        const { Platform } = require('react-native') as any;
-        info.version = Platform.Version;
-      } catch {
-        // Ignore
-      }
     }
 
     this.platformInfo = info;
@@ -114,7 +88,7 @@ export class PlatformDetector {
 
   isSupported(): boolean {
     const info = this.detect();
-    return info.isWeb || info.isCapacitor || info.isReactNative || info.isCordova;
+    return info.isWeb || info.isCapacitor || info.isCordova;
   }
 
   getPlatformName(): string {
@@ -123,6 +97,6 @@ export class PlatformDetector {
 
   isNativePlatform(): boolean {
     const info = this.detect();
-    return (info.isIOS || info.isAndroid) && (info.isCapacitor || info.isReactNative || info.isCordova);
+    return (info.isIOS || info.isAndroid) && (info.isCapacitor || info.isCordova);
   }
 }

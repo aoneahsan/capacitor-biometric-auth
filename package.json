@@ -1,6 +1,6 @@
 {
   "name": "capacitor-biometric-authentication",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Framework-agnostic biometric authentication library. Works with React, Vue, Angular, or vanilla JS. No providers required!",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -54,7 +54,6 @@
     "touch-id",
     "webauthn",
     "react",
-    "react-native",
     "cordova",
     "web",
     "provider-less",

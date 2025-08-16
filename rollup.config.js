@@ -28,7 +28,7 @@ const mainBuild = {
       inlineDynamicImports: true,
     },
   ],
-  external: ['@capacitor/core', 'react-native'],
+  external: ['@capacitor/core'],
   plugins: [
     resolve({
       preferBuiltins: false,
@@ -68,7 +68,6 @@ const webBuild = {
       resolveId(source) {
         // Skip native-specific imports for web build
         if (source.includes('CapacitorAdapter') || 
-            source.includes('ReactNativeAdapter') ||
             source.includes('@capacitor/core')) {
           return { id: source, external: true };
         }
@@ -76,8 +75,7 @@ const webBuild = {
       },
       load(id) {
         // Provide empty modules for native adapters in web build
-        if (id.includes('CapacitorAdapter') || 
-            id.includes('ReactNativeAdapter')) {
+        if (id.includes('CapacitorAdapter')) {
           return 'export const unused = null;';
         }
         return null;

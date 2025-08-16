@@ -4,7 +4,7 @@ A framework-agnostic biometric authentication library that works with any JavaSc
 
 ## Features
 
-- **🚀 Zero Dependencies** - Works without requiring Capacitor, React Native, or any specific framework
+- **🚀 Zero Dependencies** - Works without requiring any specific framework (Capacitor is optional)
 - **🎯 Provider-less** - Direct API like Zustand, no Context/Providers needed
 - **📱 Multi-Platform** - Web (WebAuthn), iOS, Android, Electron support
 - **🔌 Framework Agnostic** - Works with React, Vue, Angular, Vanilla JS
@@ -257,7 +257,7 @@ const data = await BiometricAuth.withAuthentication(
 | iOS | Touch ID / Face ID | ✅ |
 | Android | BiometricPrompt | ✅ |
 | Electron | Touch ID (macOS) | ✅ |
-| React Native | With react-native-biometrics | ✅ |
+| React Native | Not supported (use React + Capacitor) | ❌ |
 
 ## Advanced Usage
 

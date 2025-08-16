@@ -74,14 +74,9 @@ export class BiometricAuthCore {
           if (this.platformDetector.detect().isCapacitor) {
             const { CapacitorAdapter } = await import('../adapters/CapacitorAdapter');
             this.currentAdapter = new CapacitorAdapter();
-          } else if (this.platformDetector.detect().isReactNative) {
-            // Dynamic import for React Native
-            try {
-              const { ReactNativeAdapter } = await import('../adapters/ReactNativeAdapter');
-              this.currentAdapter = new ReactNativeAdapter();
-            } catch {
-              throw new Error('React Native biometric module not installed. Please install react-native-biometrics');
-            }
+          } else if (this.platformDetector.detect().isCordova) {
+            // For Cordova, we might need a separate adapter in the future
+            throw new Error('Cordova support not yet implemented. Please use Capacitor for native biometric authentication.');
           }
           break;
 

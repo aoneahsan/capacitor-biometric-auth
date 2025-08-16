@@ -13,7 +13,9 @@ export function toArrayBuffer(
   }
 
   if (data instanceof Uint8Array) {
-    return data.buffer.slice(
+    // Ensure we're working with ArrayBuffer, not SharedArrayBuffer
+    const buffer = data.buffer as ArrayBuffer;
+    return buffer.slice(
       data.byteOffset,
       data.byteOffset + data.byteLength
     );
